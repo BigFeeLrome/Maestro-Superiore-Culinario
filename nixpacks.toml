@@ -6,6 +6,3 @@ cmds = ["npm run build"]
 
 [start]
 cmd = "npx serve dist/maestro-superiore-alcolico -s -l $PORT"
-
-[variables]
-GEMINI_API_KEY = ""
