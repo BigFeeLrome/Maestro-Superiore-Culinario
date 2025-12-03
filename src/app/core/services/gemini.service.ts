@@ -39,22 +39,44 @@ export class GeminiService {
   // --- JSON PARSER ---
   private extractJson<T>(text: string): T {
     if (!text) throw new Error("Empty response from AI");
+    
+    console.log('extractJson - Raw response length:', text.length);
+    
     let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    // Try direct parse first
     try {
       return JSON.parse(clean);
     } catch (e) {
-      const firstCurly = clean.indexOf('{');
-      const lastCurly = clean.lastIndexOf('}');
-      if (firstCurly !== -1 && lastCurly !== -1) {
-          try { return JSON.parse(clean.substring(firstCurly, lastCurly + 1)); } catch (e2) {}
-      }
-      const firstSquare = clean.indexOf('[');
-      const lastSquare = clean.lastIndexOf(']');
-      if (firstSquare !== -1 && lastSquare !== -1) {
-          try { return JSON.parse(clean.substring(firstSquare, lastSquare + 1)); } catch (e3) {}
-      }
-      throw new Error("Failed to parse JSON response");
+      console.log('extractJson - Direct parse failed, trying extraction...');
     }
+    
+    // Try to extract JSON object
+    const firstCurly = clean.indexOf('{');
+    const lastCurly = clean.lastIndexOf('}');
+    if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
+      try { 
+        const extracted = clean.substring(firstCurly, lastCurly + 1);
+        return JSON.parse(extracted); 
+      } catch (e2) {
+        console.log('extractJson - Object extraction failed');
+      }
+    }
+    
+    // Try to extract JSON array
+    const firstSquare = clean.indexOf('[');
+    const lastSquare = clean.lastIndexOf(']');
+    if (firstSquare !== -1 && lastSquare !== -1 && lastSquare > firstSquare) {
+      try { 
+        const extracted = clean.substring(firstSquare, lastSquare + 1);
+        return JSON.parse(extracted); 
+      } catch (e3) {
+        console.log('extractJson - Array extraction failed');
+      }
+    }
+    
+    console.error('extractJson - All parsing attempts failed. First 500 chars:', clean.substring(0, 500));
+    throw new Error("Failed to parse JSON response");
   }
 
   // --- CORE METHODS ---
@@ -169,11 +191,41 @@ EXAMPLE SUGGESTIONS:
   }
 
   async summarizeChatContext(chat: ChatSession): Promise<any> {
-    const prompt = "Summarize finalized cocktail parameters from history. JSON: {ingredients:[], expertise:'', constraints:[], concept_abstract:''}";
+    const prompt = `
+TASK: Extract the finalized cocktail parameters from our conversation.
+OUTPUT MUST BE VALID JSON ONLY. No explanations, no markdown, just the JSON object.
+
+REQUIRED FORMAT:
+{
+  "ingredients": ["ingredient1", "ingredient2"],
+  "expertise": "Appassionato",
+  "constraints": ["constraint1", "constraint2"],
+  "concept_abstract": "Brief description of the cocktail concept"
+}
+
+If any field is unclear from the conversation, use reasonable defaults:
+- ingredients: extract mentioned spirits, mixers, garnishes
+- expertise: default to "Appassionato"
+- constraints: include mentioned techniques or styles
+- concept_abstract: summarize the drink vision in one sentence
+
+JSON OUTPUT ONLY:`;
+
     try {
-        const result = await chat.sendMessage(prompt);
-        return this.extractJson(result.response.text());
-    } catch(e) { throw e; }
+      const result = await chat.sendMessage(prompt);
+      const responseText = result.response.text();
+      console.log('summarizeChatContext - Response:', responseText.substring(0, 200));
+      return this.extractJson(responseText);
+    } catch(e) { 
+      console.error('summarizeChatContext failed:', e);
+      // Return a fallback object instead of throwing
+      return {
+        ingredients: [],
+        expertise: 'Appassionato',
+        constraints: [],
+        concept_abstract: ''
+      };
+    }
   }
 
   // --- IMAGEN (REST API WORKAROUND) ---
