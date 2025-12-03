@@ -32,7 +32,11 @@ export class GeminiService {
     console.log('Getting model:', modelName);
     return this.genAI.getGenerativeModel({ 
         model: modelName,
-        systemInstruction: sysInstruct
+        systemInstruction: sysInstruct,
+        generationConfig: {
+          maxOutputTokens: 8192,
+          temperature: 0.7
+        }
     });
   }
 
