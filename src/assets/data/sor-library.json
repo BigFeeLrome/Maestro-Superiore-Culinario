@@ -1,0 +1,50 @@
+[
+  {
+    "id": "T-001",
+    "category": "TECHNIQUE",
+    "title": "Milk Washing (Clarification)",
+    "scientific_principle": "Casein-Tannin Bond Aggregation",
+    "pairing_tags": ["Clarified", "Texture", "Milk Punch"],
+    "technical_notes": "Use Whole Milk (fat is key). Ratio 4:1 (Spirit Mix : Milk). Add Acidified Spirit TO Milk (not vice-versa) to control curdling speed. Filter through coffee filter twice for crystal clarity."
+  },
+  {
+    "id": "T-002",
+    "category": "TECHNIQUE",
+    "title": "Fat Washing",
+    "scientific_principle": "Lipid Extraction & Freezing Point Differential",
+    "pairing_tags": ["Fat-Washed", "Savory", "Texture"],
+    "technical_notes": "Combine liquid fat (butter/oil) with spirit. Freeze overnight. Fat solidifies at top, remove solid puck. Spirit retains flavor and silky texture but no grease."
+  },
+  {
+    "id": "I-001",
+    "category": "INGREDIENT",
+    "title": "Citric Acid Solution",
+    "scientific_principle": "Standardized Acidity",
+    "pairing_tags": ["Sour", "Acid", "Sustainability"],
+    "technical_notes": "Dissolve 6g Citric Acid powder in 100ml water to mimic Lemon Juice acidity without flavor/perishability. Use Malic Acid for Lime profile."
+  },
+  {
+    "id": "T-003",
+    "category": "TECHNIQUE",
+    "title": "Super Juice (Oleosaccharum Extraction)",
+    "scientific_principle": "Essential Oil Extraction via Acid",
+    "pairing_tags": ["Sustainability", "Zero Waste", "Citrus"],
+    "technical_notes": "Peel citrus. Macerate peels in Citric/Malic acid for 1 hour to extract oils. Blend with water and juice of the fruit. Yields 8x more juice than squeezing alone."
+  },
+  {
+    "id": "T-004",
+    "category": "TECHNIQUE",
+    "title": "Ice Dilution Thermodynamics",
+    "scientific_principle": "Enthalpy of Fusion",
+    "pairing_tags": ["Dilution", "Temperature", "Physics"],
+    "technical_notes": "Shaking: Adds ~25-30% water volume. Equilibrium temp -2C to -5C. Stirring: Adds ~15-20% water. Equilibrium temp 0C to -2C. Surface area of ice dictates speed of cooling."
+  },
+  {
+    "id": "I-002",
+    "category": "INGREDIENT",
+    "title": "Saline Solution",
+    "scientific_principle": "Flavor Enhancement / Bitterness Suppression",
+    "pairing_tags": ["Savory", "Enhancer", "Salt"],
+    "technical_notes": "20% Saline Solution (20g Salt / 80g Water). Use 2-3 drops in citrus drinks to suppress bitterness and pop citrus notes. Essential for Espresso Martinis."
+  }
+]

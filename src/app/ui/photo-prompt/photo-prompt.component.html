@@ -1,0 +1,106 @@
+<div class="bg-white p-8 animate-fade-in relative max-w-2xl mx-auto border border-stone-200 shadow-xl">
+  
+  <!-- EDITOR VIEW (Always Visible when modal is open) -->
+  <div>
+      <h3 class="font-script text-4xl text-stone-900 mb-6 flex items-center justify-center">
+        {{ lang.t().photo_title }} 
+      </h3>
+      <p class="text-xs font-sans text-stone-400 tracking-widest uppercase text-center mb-6">{{ lang.t().photo_subtitle }}</p>
+
+      <div class="flex justify-between items-end mb-2">
+        <label class="font-sans text-[10px] uppercase tracking-widest text-stone-400">{{ lang.t().photo_label }}</label>
+        
+        <div class="flex gap-2">
+          <!-- EXPORT MD -->
+          <button (click)="exportPromptMd()" 
+                  class="font-sans text-[10px] uppercase tracking-widest px-3 py-1 border border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-800 transition-all cursor-pointer">
+            {{ lang.t().photo_export_md }}
+          </button>
+          
+          <!-- COPY BUTTON -->
+          <button (click)="copyPrompt()" 
+                  class="font-sans text-[10px] uppercase tracking-widest px-3 py-1 border transition-all cursor-pointer"
+                  [class.bg-green-100]="copySuccess()"
+                  [class.text-green-800]="copySuccess()"
+                  [class.border-green-200]="copySuccess()"
+                  [class.bg-stone-50]="!copySuccess()"
+                  [class.text-stone-500]="!copySuccess()"
+                  [class.border-stone-200]="!copySuccess()"
+                  [class.hover:border-stone-800]="!copySuccess()">
+            {{ copySuccess() ? lang.t().photo_copied : lang.t().photo_copy }}
+          </button>
+        </div>
+      </div>
+
+      <textarea 
+        [ngModel]="editablePrompt()"
+        (ngModelChange)="editablePrompt.set($event)"
+        rows="8"
+        class="w-full bg-stone-50 border border-stone-200 text-stone-800 p-6 focus:border-stone-800 outline-none mb-6 font-serif text-lg leading-relaxed resize-none shadow-inner"
+        [placeholder]="lang.t().photo_placeholder">
+      </textarea>
+      
+      <button 
+        (click)="generateImage()" 
+        [disabled]="!editablePrompt()"
+        class="w-full bg-stone-900 text-white font-sans text-xs uppercase tracking-[0.25em] py-4 hover:bg-stone-700 transition-all disabled:opacity-50 shadow-lg cursor-pointer">
+        {{ lang.t().photo_render }}
+      </button>
+  </div>
+
+  <!-- IMAGE OVERLAY (POP UP) -->
+  @if (showImageOverlay()) {
+    <div class="fixed inset-0 z-[100] bg-stone-900/95 backdrop-blur-md flex flex-col items-center justify-center p-8 animate-[fadeIn_0.3s_ease-in-out]">
+        
+        <!-- Loading State -->
+        @if (isGenerating()) {
+           <div class="text-center">
+              <div class="w-16 h-16 border-4 border-stone-800 border-t-white rounded-full animate-spin mb-8 mx-auto"></div>
+              <p class="font-sans text-sm uppercase tracking-[0.3em] text-white">{{ lang.t().photo_processing }}</p>
+           </div>
+        }
+
+        <!-- Image Display -->
+        @if (generatedImageUrl() && !isGenerating()) {
+           <div class="relative max-w-7xl w-full flex flex-col items-center gap-6">
+              
+              <!-- The Image -->
+              <div class="relative shadow-2xl overflow-hidden rounded-sm animate-fade-in border-4 border-white/5 bg-black">
+                <img 
+                  [src]="generatedImageUrl()" 
+                  (load)="onImageLoad()"
+                  class="max-h-[70vh] object-contain mx-auto" 
+                  alt="Generated Dish">
+              </div>
+
+              <!-- THE NEW MENU BAR -->
+              <div class="flex flex-wrap gap-4 justify-center items-center bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 animate-fade-in mt-4">
+                 
+                 <!-- 1. REGENERATE -->
+                 <button (click)="handleRegenerate()" class="bg-stone-800 hover:bg-stone-700 text-white px-6 py-3 font-sans text-[10px] uppercase tracking-[0.2em] transition-colors border border-stone-600 cursor-pointer">
+                    {{ lang.t().photo_btn_regenerate }}
+                 </button>
+
+                 <!-- 2. DOWNLOAD -->
+                 <button (click)="handleDownload()" class="bg-stone-800 hover:bg-stone-700 text-white px-6 py-3 font-sans text-[10px] uppercase tracking-[0.2em] transition-colors border border-stone-600 cursor-pointer">
+                    {{ lang.t().photo_btn_download }}
+                 </button>
+
+                 <!-- 3. INSERT (Primary) -->
+                 <button (click)="handleInsert()" class="bg-white text-stone-900 hover:bg-stone-200 px-8 py-3 font-sans text-[10px] uppercase tracking-[0.25em] transition-colors font-bold shadow-lg cursor-pointer">
+                    {{ lang.t().photo_btn_insert }}
+                 </button>
+
+                 <!-- 4. CLOSE / BACK -->
+                 <button (click)="handleClose()" class="text-white/70 hover:text-white px-6 py-3 font-sans text-[10px] uppercase tracking-[0.2em] transition-colors cursor-pointer">
+                    {{ lang.t().photo_btn_close }}
+                 </button>
+
+              </div>
+           </div>
+        }
+
+    </div>
+  }
+
+</div>

@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "npx serve dist/maestro-superiore-alcolico -s -l $PORT",
+    "restartPolicyMaxRetries": 5
+  }
+}

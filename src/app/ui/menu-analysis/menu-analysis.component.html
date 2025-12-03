@@ -1,0 +1,268 @@
+<div class="max-w-7xl mx-auto p-8 animate-fade-in relative min-h-screen">
+    
+    <!-- HEADER -->
+    <header class="mb-12 text-center select-none">
+        <h1 class="font-script text-6xl text-stone-900 mb-2">{{ lang.t().ana_title }}</h1>
+        <p class="font-sans text-xs uppercase tracking-[0.2em] text-stone-500">{{ lang.t().ana_subtitle }}</p>
+    </header>
+
+    <!-- INPUT SECTION (Visible if no result) -->
+    @if (!analysisResult() && !isAnalyzing()) {
+        <div class="max-w-2xl mx-auto bg-white p-12 border border-stone-200 shadow-xl text-center">
+            
+            <!-- File Drop Zone -->
+            <div class="border-2 border-dashed border-stone-300 rounded-sm p-12 mb-8 hover:bg-stone-50 transition-colors relative">
+                <input type="file" (change)="onFileSelected($event)" accept=".pdf,image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                <div class="pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-stone-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-sans text-xs uppercase tracking-widest text-stone-600 font-bold mb-2">
+                        {{ uploadedFile() ? uploadedFile()?.name : lang.t().ana_upload_label }}
+                    </p>
+                    <p class="font-serif text-sm italic text-stone-400">PDF, JPG, PNG</p>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-4 mb-8">
+                <div class="h-px bg-stone-200 flex-grow"></div>
+                <span class="font-serif italic text-stone-400">AND / OR</span>
+                <div class="h-px bg-stone-200 flex-grow"></div>
+            </div>
+
+            <!-- URL Input -->
+            <div class="mb-8">
+                <label class="block text-left font-sans text-[10px] uppercase tracking-widest text-stone-400 mb-2">{{ lang.t().ana_url_label }}</label>
+                <input 
+                   type="text" 
+                   [(ngModel)]="websiteUrl" 
+                   class="w-full bg-stone-50 border border-stone-300 p-4 font-serif text-lg focus:border-stone-800 outline-none placeholder-stone-300" 
+                   placeholder="https://www.example-restaurant.com"
+                >
+            </div>
+
+            <button 
+                (click)="startAnalysis()" 
+                [disabled]="!uploadedFile() && !websiteUrl()"
+                class="w-full bg-stone-900 text-white py-5 font-sans text-xs uppercase tracking-[0.3em] hover:bg-stone-700 transition-all disabled:opacity-50 cursor-pointer">
+                {{ lang.t().ana_analyze_btn }}
+            </button>
+
+        </div>
+    }
+
+    <!-- LOADING STATE -->
+    @if (isAnalyzing()) {
+        <div class="flex flex-col items-center justify-center py-32 animate-fade-in">
+            <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-8"></div>
+            <p class="font-serif text-2xl italic text-stone-600">{{ lang.t().ana_analyzing }}</p>
+            <p class="font-sans text-[9px] uppercase tracking-widest text-stone-400 mt-2">Powered by Gemini Multimodal & Search Grounding</p>
+        </div>
+    }
+
+    <!-- RESULTS DASHBOARD -->
+    @if (analysisResult(); as res) {
+        <div class="animate-fade-in space-y-8 pb-20">
+            
+            <!-- ACTIONS HEADER -->
+            <div class="flex justify-end mb-4">
+                <button (click)="exportAnalysisPdf()" 
+                        [disabled]="isExporting()"
+                        class="bg-stone-100 hover:bg-stone-200 text-stone-600 border border-stone-200 px-4 py-2 font-sans text-[10px] uppercase tracking-widest font-bold transition-all flex items-center gap-2 cursor-pointer">
+                    @if (isExporting()) {
+                        <div class="w-3 h-3 border-2 border-stone-400 border-t-stone-800 rounded-full animate-spin"></div>
+                        Exporting...
+                    } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {{ lang.t().ana_btn_export_pdf }}
+                    }
+                </button>
+            </div>
+
+            <!-- 1. IDENTITY CARD -->
+            <div class="bg-stone-900 text-white p-8 rounded-sm shadow-2xl relative overflow-hidden">
+                <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="font-sans text-[10px] uppercase tracking-widest text-stone-400 block mb-2">{{ lang.t().ana_profile_title }}</span>
+                        <h2 class="font-serif text-4xl italic mb-4">{{ res.restaurant_profile.name || 'Restaurant' }}</h2>
+                        <p class="font-serif text-lg leading-relaxed text-stone-300">"{{ res.global_critique }}"</p>
+                    </div>
+                    <div class="space-y-4 font-sans text-xs uppercase tracking-wider">
+                         <div class="flex justify-between border-b border-stone-700 pb-2">
+                             <span class="text-stone-500">{{ lang.t().ana_identity }}</span>
+                             <span class="text-white font-bold">{{ res.restaurant_profile.brand_identity }}</span>
+                         </div>
+                         <div class="flex justify-between border-b border-stone-700 pb-2">
+                             <span class="text-stone-500">{{ lang.t().ana_vibe }}</span>
+                             <span class="text-white font-bold">{{ res.restaurant_profile.perceived_vibe }}</span>
+                         </div>
+                         <div class="flex justify-between border-b border-stone-700 pb-2">
+                             <span class="text-stone-500">{{ lang.t().ana_target }}</span>
+                             <span class="text-white font-bold">{{ res.restaurant_profile.target_audience }}</span>
+                         </div>
+                    </div>
+                </div>
+                <!-- Decor -->
+                <div class="absolute -right-10 -bottom-20 text-[200px] font-script text-white opacity-5 pointer-events-none">Audit</div>
+            </div>
+
+            <!-- 2. STRATEGIC OPPORTUNITIES -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @for (opp of res.strategic_opportunities; track $index) {
+                    <div class="bg-white p-6 border-l-4 border-amber-500 shadow-sm">
+                        <span class="font-sans text-[10px] uppercase tracking-widest text-amber-600 mb-2 block">Opportunity 0{{$index+1}}</span>
+                        <p class="font-serif text-lg italic text-stone-800">{{ opp }}</p>
+                    </div>
+                }
+            </div>
+
+            <!-- 3. DISH ANALYSIS TABLE -->
+            <div class="bg-white shadow-xl overflow-hidden rounded-sm border border-stone-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-stone-50 text-stone-500 font-sans text-[10px] uppercase tracking-widest border-b border-stone-200">
+                            <tr>
+                                <th class="p-6 font-bold w-1/5">{{ lang.t().ana_table_dish }}</th>
+                                <th class="p-6 font-bold w-1/5">{{ lang.t().ana_table_critique }}</th>
+                                <th class="p-6 font-bold w-1/5">{{ lang.t().ana_table_improvement }}</th>
+                                <th class="p-6 font-bold w-24 text-center">{{ lang.t().ana_table_score }}</th>
+                                <th class="p-6 font-bold w-32 text-center">{{ lang.t().ana_table_actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            @for (dish of res.dishes; track dish.original_name) {
+                                <tr class="hover:bg-stone-50 transition-colors">
+                                    <td class="p-6 align-top">
+                                        <div class="font-serif text-xl font-bold text-stone-800 mb-1">{{ dish.original_name }}</div>
+                                        <div class="font-serif text-sm italic text-stone-500">{{ dish.current_description }}</div>
+                                    </td>
+                                    <td class="p-6 align-top text-stone-600 font-serif text-sm leading-relaxed border-l border-stone-50">
+                                        {{ dish.critique }}
+                                    </td>
+                                    <td class="p-6 align-top border-l border-stone-50">
+                                        <div class="text-emerald-800 font-serif text-sm leading-relaxed font-medium">
+                                            {{ dish.suggested_improvement }}
+                                        </div>
+                                    </td>
+                                    <td class="p-6 align-top text-center border-l border-stone-50">
+                                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-full font-sans font-bold text-xs border-2"
+                                             [class.border-emerald-500]="dish.alignment_score >= 80"
+                                             [class.text-emerald-700]="dish.alignment_score >= 80"
+                                             [class.border-amber-500]="dish.alignment_score >= 50 && dish.alignment_score < 80"
+                                             [class.text-amber-700]="dish.alignment_score >= 50 && dish.alignment_score < 80"
+                                             [class.border-red-500]="dish.alignment_score < 50"
+                                             [class.text-red-700]="dish.alignment_score < 50">
+                                            {{ dish.alignment_score }}
+                                        </div>
+                                    </td>
+                                    <!-- ACTION COLUMN -->
+                                    <td class="p-6 align-top text-center border-l border-stone-50">
+                                        <div class="flex flex-col gap-2 items-center">
+                                            <!-- REGENERATE -->
+                                            <button (click)="regenerateDish($index, dish)"
+                                                    [disabled]="isRegeneratingRow().has($index) || isGeneratingRecipe()"
+                                                    class="w-full bg-stone-100 hover:bg-stone-200 text-stone-600 border border-stone-200 px-3 py-2 rounded-sm font-sans text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px] cursor-pointer">
+                                                @if (isRegeneratingRow().has($index)) {
+                                                    <div class="w-3 h-3 border-2 border-stone-400 border-t-stone-800 rounded-full animate-spin mr-2"></div>
+                                                    Refining...
+                                                } @else {
+                                                    {{ lang.t().ana_btn_regenerate }}
+                                                }
+                                            </button>
+
+                                            <!-- CREATE RECIPE (Triggers Config Modal) -->
+                                            <button (click)="openRecipeConfig(dish)"
+                                                    [disabled]="isRegeneratingRow().has($index) || isGeneratingRecipe()"
+                                                    class="w-full bg-stone-800 hover:bg-stone-700 text-white border border-stone-800 px-3 py-2 rounded-sm font-sans text-[9px] uppercase tracking-wider font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px] cursor-pointer">
+                                                @if (isGeneratingRecipe()) {
+                                                   <span class="animate-pulse">Building...</span>
+                                                } @else {
+                                                   {{ lang.t().ana_btn_create_recipe }}
+                                                }
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center pt-8">
+                 <button (click)="analysisResult.set(null)" class="text-stone-500 hover:text-stone-900 font-sans text-xs uppercase tracking-widest border-b border-stone-300 hover:border-stone-900 pb-1 cursor-pointer">
+                     Start New Audit
+                 </button>
+            </div>
+
+        </div>
+    }
+
+    <!-- RECIPE CONFIGURATION MODAL -->
+    @if (recipeConfigDish(); as configDish) {
+        <div class="fixed inset-0 z-[70] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+            <div class="bg-white w-full max-w-md p-8 border border-stone-200 shadow-2xl relative">
+                
+                <!-- Close X -->
+                <button (click)="closeRecipeConfig()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-900 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <h3 class="font-serif italic text-2xl text-stone-900 mb-2">Definisci Complessità</h3>
+                <p class="font-sans text-xs uppercase tracking-widest text-stone-500 mb-6">
+                    Creazione ricetta per: <span class="text-stone-800 font-bold">{{ configDish.original_name }}</span>
+                </p>
+
+                <div class="flex flex-col gap-2 mb-8">
+                    <label class="font-sans text-[10px] uppercase tracking-widest text-stone-400 font-bold">Livello Expertise Target</label>
+                    <div class="relative">
+                        <select [(ngModel)]="selectedExpertise" class="w-full bg-stone-50 border border-stone-300 p-3 font-sans text-xs uppercase tracking-wider text-stone-900 font-bold focus:border-stone-800 outline-none appearance-none rounded-none cursor-pointer hover:bg-stone-100 transition-colors">
+                            <option value="Principiante">{{ lang.t().exp_beginner }}</option>
+                            <option value="Didatta">{{ lang.t().exp_teacher }}</option>
+                            <option value="Appassionato">{{ lang.t().exp_enthusiast }}</option>
+                            <option value="Professionista">{{ lang.t().exp_pro }}</option>
+                        </select>
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button (click)="confirmRecipeCreation()" 
+                            class="flex-grow bg-stone-900 text-white py-4 font-sans text-xs uppercase tracking-[0.2em] hover:bg-stone-700 transition-all shadow-lg cursor-pointer">
+                        Genera Ricetta
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    <!-- RECIPE MODAL OVERLAY (RESULT) -->
+    @if (activeRecipe(); as recipe) {
+        <div class="fixed inset-0 z-[60] bg-stone-50 overflow-y-auto animate-[fadeIn_0.3s_ease-out]">
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white/90 backdrop-blur-md border-b border-stone-200 p-4 flex justify-between items-center z-50">
+                <span class="font-sans text-xs uppercase tracking-widest text-stone-500">
+                    Recipe Generated for {{ recipe.meta.dish_name }}
+                </span>
+                <button (click)="closeRecipeModal()" class="text-stone-400 hover:text-stone-900 font-bold px-4 py-2 border border-stone-200 hover:border-stone-900 transition-all text-xs uppercase tracking-widest cursor-pointer">
+                    Close Recipe
+                </button>
+            </div>
+            
+            <!-- Recipe View Content -->
+            <div class="pb-20">
+                <app-recipe-view [data]="recipe.maestro_synthesis" [meta]="recipe.meta"></app-recipe-view>
+            </div>
+        </div>
+    }
+</div>

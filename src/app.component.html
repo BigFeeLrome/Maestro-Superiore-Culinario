@@ -1,0 +1,46 @@
+<div class="min-h-screen relative">
+  
+  <!-- LANGUAGE SELECTOR (Top Left) - ONLY IN LANDING MODE -->
+  @if (appState() === 'LANDING') {
+    <div class="absolute top-0 left-0 p-4 z-[60] flex gap-2 animate-fade-in print:hidden">
+      <button (click)="setLang('IT')" 
+              class="font-sans text-[10px] font-bold uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
+              [class.text-stone-900]="isLang('IT')"
+              [class.text-stone-400]="!isLang('IT')"
+              [class.border-b-2]="isLang('IT')"
+              [class.border-stone-900]="isLang('IT')"
+              [class.border-transparent]="!isLang('IT')">
+        ITA
+      </button>
+      <div class="w-px h-4 bg-stone-300 self-center"></div>
+      <button (click)="setLang('EN')" 
+              class="font-sans text-[10px] font-bold uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
+              [class.text-stone-900]="isLang('EN')"
+              [class.text-stone-400]="!isLang('EN')"
+              [class.border-b-2]="isLang('EN')"
+              [class.border-stone-900]="isLang('EN')"
+              [class.border-transparent]="!isLang('EN')">
+        ENG
+      </button>
+    </div>
+  }
+
+  @if (appState() !== 'LANDING') {
+    <!-- BACK BUTTON -->
+    <header class="absolute top-0 left-0 p-4 z-50 print:hidden">
+      <button (click)="backToHome()" 
+        class="font-sans text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors px-4 py-2 font-bold cursor-pointer">
+        &larr; {{ lang.t().back_home }}
+      </button>
+    </header>
+  }
+
+  @switch (appState()) {
+    @case ('LANDING') {
+      <app-landing (modeSelected)="selectMode($event)"></app-landing>
+    }
+    @case ('CREATION') {
+      <app-dashboard [mode]="creationMode()"></app-dashboard>
+    }
+  }
+</div>

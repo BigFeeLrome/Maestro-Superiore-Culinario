@@ -1,0 +1,91 @@
+
+<!-- MODE: ANALYSIS (Distinct View, No Wizard State) -->
+@if (mode === 'ANALYSIS') {
+   <app-menu-analysis></app-menu-analysis>
+} 
+@else {
+  <!-- NORMAL CREATION FLOW -->
+  
+  <!-- STATE 1: IDLE (Full Screen Wizard - No Scrolling) -->
+  @if (currentState === 'idle') {
+    <div class="h-screen w-screen overflow-hidden bg-stone-50 flex flex-col select-none">
+      <!-- The Wizard takes up all available space -->
+      <app-input-wizard class="flex-grow w-full h-full" [mode]="mode" (submitRequest)="onEvoke($event)"></app-input-wizard>
+    </div>
+  } 
+
+  <!-- STATE 2, 3, 4: LOADING, ERROR, SUCCESS (Classic Scrollable Layout) -->
+  @else {
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 min-h-screen">
+      
+      <!-- Header (Visible only when not in Wizard mode) -->
+      <header class="mb-12 text-center mt-8 animate-fade-in select-none cursor-default print:hidden">
+        <h1 class="font-script text-7xl text-stone-900 mb-4">{{ lang.t().dashboard_title }}</h1>
+        <div class="h-px w-24 bg-stone-400 mx-auto mb-4"></div>
+      </header>
+
+      <main>
+        @if (currentState === 'loading') {
+          <div class="text-center py-20 flex flex-col items-center justify-center h-[60vh] select-none cursor-default">
+            <div class="inline-block w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-8"></div>
+            <p class="font-serif text-2xl italic text-stone-600">{{ lang.t().loading_materializing }}</p>
+            <p class="font-sans text-xs uppercase tracking-widest text-stone-400 mt-2">{{ lang.t().loading_maestro_cooking }}</p>
+          </div>
+        } @else if (currentState === 'error') {
+           <div class="text-center p-12 bg-white border border-stone-200 shadow-lg max-w-lg mx-auto mt-10 select-none">
+              <h3 class="font-serif text-3xl italic text-red-900 mb-4">{{ lang.t().error_title }}</h3>
+              <p class="text-stone-600 mb-8">{{ lang.t().error_desc }}</p>
+              <button (click)="reset()" class="bg-stone-900 text-white px-12 py-4 font-sans text-xs uppercase tracking-[0.25em] hover:bg-stone-700 transition-colors cursor-pointer">
+                  {{ lang.t().btn_retry }}
+              </button>
+            </div>
+        } 
+        <!-- SUCCESS STATE -->
+        @else {
+          
+          <!-- CASE A: SINGLE DISH -->
+          @if (mode === 'SINGLE' && maestroResponse(); as response) {
+            <div class="animate-[fadeIn_0.5s_ease-in-out]">
+              
+              <!-- Intro Text for Sages -->
+              <div class="text-center mb-8 animate-fade-in delay-100">
+                 <p class="font-serif italic text-stone-600 text-lg">{{ lang.t().sages_intro }}</p>
+              </div>
+
+              <!-- The Council Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <app-sage-card type="SCIENTIST" [data]="response.sages_council.scientist"></app-sage-card>
+                <app-sage-card type="ARTIST" [data]="response.sages_council.artist"></app-sage-card>
+                <app-sage-card type="HISTORIAN" [data]="response.sages_council.historian"></app-sage-card>
+                <app-sage-card type="PHILOSOPHER" [data]="response.sages_council.philosopher"></app-sage-card>
+              </div>
+
+              <!-- The Synthesis (Recipe) -->
+              <app-recipe-view [data]="response.maestro_synthesis" [meta]="response.meta"></app-recipe-view>
+              
+              <!-- Reset Button -->
+              <div class="text-center mt-16 pb-16 select-none print:hidden">
+                  <button (click)="reset()" class="bg-stone-900 text-white px-16 py-5 font-sans text-xs uppercase tracking-[0.3em] hover:bg-stone-700 transition-all shadow-2xl cursor-pointer">
+                    {{ lang.t().btn_new_commission }}
+                  </button>
+              </div>
+            </div>
+          }
+
+          <!-- CASE B: MENU WORKSPACE -->
+          @if (mode === 'MENU' && menuResponse(); as menu) {
+             <app-menu-workspace [project]="menu"></app-menu-workspace>
+             
+             <!-- Reset Button (Below workspace) -->
+             <div class="text-center mt-16 pb-16 select-none print:hidden">
+                 <button (click)="reset()" class="bg-stone-900 text-white px-16 py-5 font-sans text-xs uppercase tracking-[0.3em] hover:bg-stone-700 transition-all shadow-2xl cursor-pointer">
+                   {{ lang.t().btn_new_commission }}
+                 </button>
+             </div>
+          }
+
+        }
+      </main>
+    </div>
+  }
+}

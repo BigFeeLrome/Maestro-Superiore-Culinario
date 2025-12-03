@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Maestro Superiore Alcolico",
+  "description": "An AI-powered culinary assistant that synthesizes expert analyses from various fields to generate unique and sophisticated recipes.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

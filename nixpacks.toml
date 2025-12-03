@@ -1,0 +1,11 @@
+[phases.install]
+cmds = ["npm install --include=dev"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npx serve dist/maestro-superiore-alcolico -s -l $PORT"
+
+[variables]
+GEMINI_API_KEY = ""
