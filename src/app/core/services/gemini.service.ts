@@ -257,7 +257,7 @@ JSON OUTPUT ONLY:`;
     console.log('generateImage - Starting with prompt length:', prompt.length);
     
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${this.apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${this.apiKey}`;
       
       console.log('generateImage - Calling Imagen API...');
       const response = await fetch(url, {
