@@ -127,9 +127,13 @@ export class PdfService {
     aiAdvice: string;
     isItalian: boolean;
   }): Promise<void> {
-    await this.ensureFontsLoaded();
-    
     const _pdfMake = (pdfMake as any).default || pdfMake;
+    const _pdfFonts = (pdfFonts as any).default || pdfFonts;
+
+    if (_pdfFonts && _pdfFonts.pdfMake && _pdfFonts.pdfMake.vfs) {
+      _pdfMake.vfs = _pdfFonts.pdfMake.vfs;
+    }
+
     const t = data.isItalian
       ? {
           title: 'Maestro Superiore Alcolico',
@@ -154,7 +158,7 @@ export class PdfService {
           generated: 'Generated on'
         };
 
-    const docDefinition = {
+    const docDefinition: any = {
       content: [
         { text: t.title, style: 'header' },
         { text: t.subtitle, style: 'subheader' },
@@ -204,12 +208,9 @@ export class PdfService {
           bold: true,
           margin: [0, 10, 0, 5]
         }
-      },
-      defaultStyle: {
-        font: 'Crimson'
       }
     };
 
-    _pdfMake.createPdf(docDefinition).open();
+    _pdfMake.createPdf(docDefinition).download('dilution-report.pdf');
   }
 }
