@@ -15,6 +15,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Headers per Google Sign-In (COOP/COEP)
+// Permette al popup di Google di comunicare con la finestra principale
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 // Database pool
 const isInternalRailway = (process.env.DATABASE_URL || '').includes('railway.internal');
 const pool = new Pool({
