@@ -3,29 +3,55 @@ import { GoogleGenerativeAI, GenerativeModel, ChatSession } from '@google/genera
 import { ExpertiseLevel, MaestroResponse, MaestroSynthesis, MarketReport, PhotoPrompt, MenuProjectResponse, MenuMarketReport, MenuAnalysisResponse, RestaurantProfile, AnalyzedDish } from '../models/maestro-schema.models';
 import { LanguageService, Language } from './language.service';
 import { environment } from '../../../environments/environment';
+import { ApiKeyService } from './api-key.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GeminiService {
-  private readonly genAI: GoogleGenerativeAI;
+  private genAI!: GoogleGenerativeAI;
   private apiKey: string = '';
   
   private readonly proModelName = 'gemini-2.5-flash'; 
   private readonly flashModelName = 'gemini-2.5-flash'; 
   
   private readonly langService = inject(LanguageService);
+  private readonly apiKeyStore = inject(ApiKeyService);
 
   constructor() {
-    this.apiKey = environment.geminiApiKey;
+    // Prefer user-provided key from storage, otherwise fall back to environment
+    this.apiKey = this.apiKeyStore.getApiKey() || environment.geminiApiKey;
     const maskedKey = this.apiKey ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(this.apiKey.length - 4)}` : 'MISSING';
     console.log('GeminiService init - API Key status:', maskedKey, 'Length:', this.apiKey?.length);
 
     if (!this.apiKey || this.apiKey === 'MISSING_API_KEY') {
       console.error("CRITICAL: API Key mancante o non valida. Configura environment.geminiApiKey su Railway.");
     }
+    this.configureClient();
+  }
 
-    this.genAI = new GoogleGenerativeAI(this.apiKey);
+  private configureClient() {
+    try {
+      this.genAI = new GoogleGenerativeAI(this.apiKey || '');
+    } catch (e) {
+      console.error('Errore durante la configurazione del client Gemini. Controlla la API Key.', e);
+    }
+  }
+
+  // Permette di impostare/aggiornare la API Key a runtime (es. da UI)
+  setApiKey(key: string) {
+    this.apiKey = key;
+    const maskedKey = this.apiKey ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(this.apiKey.length - 4)}` : 'MISSING';
+    console.log('GeminiService setApiKey - New key:', maskedKey);
+    this.configureClient();
+  }
+
+  // Ripristina la chiave dalle environment vars (fallback)
+  resetToEnvironmentKey() {
+    this.apiKey = environment.geminiApiKey;
+    const maskedKey = this.apiKey ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(this.apiKey.length - 4)}` : 'MISSING';
+    console.log('GeminiService resetToEnvironmentKey - Key:', maskedKey);
+    this.configureClient();
   }
 
   private getModel(modelName: string, sysInstruct?: string): GenerativeModel {

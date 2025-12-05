@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npx serve dist/maestro-superiore-alcolico -s -l $PORT",
+    "startCommand": "node server.cjs",
     "restartPolicyMaxRetries": 5
   }
 }

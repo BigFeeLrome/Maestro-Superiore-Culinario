@@ -5,4 +5,4 @@ cmds = ["npm install --include=dev"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx serve dist/maestro-superiore-alcolico -s -l $PORT"
+cmd = "node server.cjs"
