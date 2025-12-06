@@ -46,18 +46,18 @@ export class InputWizardComponent implements OnInit {
   
   // --- STRATEGIC FILTERS ENGINE ---
   private readonly initialSets = {
-    group1: ['grp1_virgin', 'grp1_low_abv', 'grp1_spirit_forward', 'grp1_sour', 'grp1_bitter'],
-    group2: ['grp2_shaken', 'grp2_stirred', 'grp2_clarified', 'grp2_fat_washed', 'grp2_smoked'],
-    group3: ['grp3_speakeasy', 'grp3_tiki', 'grp3_aperitivo', 'grp3_minimalist', 'grp3_disco'],
-    group4: ['grp4_gin', 'grp4_agave', 'grp4_whiskey', 'grp4_zero_waste', 'grp4_foraged']
+    group1: ['grp1_vegetarian', 'grp1_vegan', 'grp1_gluten_free', 'grp1_dairy_free', 'grp1_low_calorie'],
+    group2: ['grp2_baked', 'grp2_grilled', 'grp2_sous_vide', 'grp2_sauteed', 'grp2_steamed'],
+    group3: ['grp3_spring', 'grp3_summer', 'grp3_autumn', 'grp3_winter', 'grp3_fine_dining'],
+    group4: ['grp4_pasta', 'grp4_rice', 'grp4_fish', 'grp4_beef', 'grp4_vegetables']
   };
 
   // Group Definitions for AI Prompting
   private readonly groupDefinitions = {
-    group1: 'Alcohol Potency, Drink Style (Sour, Fizz, etc.), Flavor Profile',
-    group2: 'Mixology Techniques, Preparation Methods (Shaken, Stirred, Molecular)',
-    group3: 'Bar Atmosphere, Era (Prohibition, Tiki, Disco), Serving Style',
-    group4: 'Base Spirit, Sustainability, Logistics, Texture'
+    group1: 'Nutritional Profile, Dietary Requirements, Health Considerations',
+    group2: 'Cooking Technique, Temperature Control, Preparation Methods',
+    group3: 'Seasonality, Atmosphere, Dining Experience, Food Mood',
+    group4: 'Ingredient Base, Primary Components, Protein Source, Staple Foundation'
   };
 
   // The currently visible options
@@ -223,8 +223,8 @@ export class InputWizardComponent implements OnInit {
     
     // Default suggestions must be DIRECTIVES / ANSWERS, not questions.
     const defaultSuggestions = this.lang.currentLang() === 'IT' 
-      ? ['Voglio un twist sul Negroni', 'Usa uno sciroppo fatto in casa', 'Gioca con sapori affumicati']
-      : ['I want a twist on a Negroni', 'Use a homemade syrup', 'Play with smoky flavors'];
+      ? ['Un risotto con tartufo e funghi porcini', 'Un piatto vegetariano creativo', 'Qualcosa di light e sofisticato']
+      : ['A truffle risotto with porcini mushrooms', 'A creative vegetarian dish', 'Something light and sophisticated'];
 
     this.messages.update(msgs => [...msgs, {
       role: 'model',

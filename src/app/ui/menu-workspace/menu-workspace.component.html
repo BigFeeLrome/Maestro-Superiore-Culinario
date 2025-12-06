@@ -1,237 +1,120 @@
-<div class="flex flex-col lg:flex-row gap-8 animate-fade-in relative">
-    
-    <!-- LEFT SIDEBAR: CONTEXT & CHAT (Sticky) -->
-    <div class="lg:w-1/4 flex-shrink-0 print:hidden">
-        <div class="bg-white border border-stone-200 shadow-lg sticky top-8 flex flex-col max-h-[80vh]">
-            
-            <!-- Project Meta -->
-            <div class="p-6 border-b border-stone-100 bg-stone-50">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="font-sans text-[10px] uppercase tracking-[0.2em] text-stone-500 block">{{ lang.t().menu_ws_title }}</span>
-                    <!-- UNDO BUTTON -->
-                    <button (click)="undo()" 
-                            [disabled]="!canUndo() || isProcessing()"
-                            class="text-stone-400 hover:text-stone-800 disabled:opacity-20 transition-colors cursor-pointer"
-                            [title]="lang.t().btn_undo_last">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                        </svg>
-                    </button>
-                </div>
-                <h2 class="font-serif italic text-2xl text-stone-800 leading-tight mb-4">{{ project.concept.title }}</h2>
-                <div class="text-xs font-sans uppercase tracking-wider text-stone-400 mb-4">
-                    {{ project.courses.length }} {{ lang.t().menu_ws_courses }}
-                </div>
-                
-                <!-- NEW: ACTION BUTTONS -->
-                <div class="flex flex-col gap-2">
-                    <button (click)="runEconomicAnalysis()" class="bg-stone-100 text-stone-700 px-3 py-2 text-[10px] uppercase tracking-widest hover:bg-stone-200 border border-stone-200 transition-colors cursor-pointer">
-                        {{ lang.t().btn_analyze_menu }}
-                    </button>
-                    <button (click)="triggerPdfExport()" class="bg-stone-800 text-white px-3 py-2 text-[10px] uppercase tracking-widest hover:bg-stone-700 transition-colors cursor-pointer">
-                        {{ lang.t().btn_export_pdf }}
-                    </button>
-                </div>
-            </div>
+<div class="bg-slate-800 rounded-2xl p-6">
 
-            <!-- Chat Window -->
-            <div class="flex-grow flex flex-col h-[500px]">
-                <div class="flex-grow overflow-y-auto p-4 space-y-4 bg-white custom-scrollbar">
-                     <div class="bg-stone-50 p-3 rounded-lg border border-stone-100">
-                         <p class="font-serif text-sm italic text-stone-600">
-                             {{ lang.t().chat_system_welcome }}
-                         </p>
-                     </div>
-                     
-                     @for (msg of chatMessages(); track $index) {
-                         <div [class.text-right]="msg.role === 'user'">
-                             <div class="inline-block p-3 rounded-lg max-w-[90%] text-sm font-serif"
-                                  [class.bg-stone-800]="msg.role === 'user'"
-                                  [class.text-white]="msg.role === 'user'"
-                                  [class.bg-stone-100]="msg.role === 'model'"
-                                  [class.text-stone-800]="msg.role === 'model'">
-                                 {{ msg.text }}
-                             </div>
-                         </div>
-                     }
-
-                     @if (isProcessing()) {
-                        <div class="text-center py-4 animate-pulse">
-                            <p class="font-sans text-[9px] uppercase tracking-widest text-stone-400">{{ processingMessage() }}</p>
-                        </div>
-                     }
-                </div>
-                
-                <!-- Input -->
-                <div class="p-3 border-t border-stone-200 bg-stone-50">
-                    <form (ngSubmit)="sendChatMessage()" class="flex gap-2">
-                        <input type="text" 
-                               [(ngModel)]="chatInput" 
-                               name="chatInput"
-                               [disabled]="isProcessing()"
-                               [placeholder]="lang.t().menu_ws_chat_placeholder"
-                               class="flex-grow bg-white border border-stone-300 p-2 text-sm font-serif focus:border-stone-800 outline-none disabled:bg-stone-100">
-                        <button type="submit" 
-                                [disabled]="isProcessing() || !chatInput.trim()"
-                                class="bg-stone-800 text-white w-8 h-8 flex items-center justify-center rounded-sm hover:bg-stone-700 disabled:opacity-50 cursor-pointer">
-                            &uarr;
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-amber-400">{{ lang.t().menu_ws_title }}</h2>
+        <div class="flex gap-2">
+            @if (menuHistory().length) {
+                <button
+                        (click)="undo()"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">
+                    {{ lang.t().btn_undo_last }}
+                </button>
+            }
+            <button
+                    (click)="analyzeMarket()"
+                    [disabled]="isAnalyzing()"
+                    class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-medium">
+                {{ lang.t().btn_analyze_menu }}
+            </button>
         </div>
     </div>
 
-    <!-- MAIN STAGE -->
-    <div class="flex-1 min-w-0 print:hidden">
-        
-        <!-- OVERVIEW MODE -->
-        @if (selectedCourseIndex() === null) {
-            <div class="animate-fade-in">
-                <!-- Concept Card -->
-                <div class="bg-white p-8 border border-stone-200 shadow-md mb-8 text-center relative group">
-                    <span class="font-sans text-[10px] uppercase tracking-[0.3em] text-stone-400 mb-4 block">{{ lang.t().menu_ws_concept }}</span>
-                    <p class="font-serif text-xl leading-relaxed italic text-stone-700 max-w-2xl mx-auto">
-                        "{{ project.concept.description }}"
-                    </p>
-                    <div class="mt-6 flex justify-center gap-4">
-                         <span class="px-3 py-1 border border-stone-200 text-[10px] uppercase tracking-wider text-stone-500">{{ project.concept.seasonality }}</span>
-                         <span class="px-3 py-1 border border-stone-200 text-[10px] uppercase tracking-wider text-stone-500">{{ project.concept.philosophical_theme }}</span>
-                    </div>
-                </div>
+    <!-- CONCEPT -->
+    <div class="bg-gradient-to-r from-amber-900/30 to-slate-800 p-6 rounded-xl mb-6">
+        <h3 class="text-xl font-semibold text-amber-400 mb-2">{{ menu.concept.title }}</h3>
+        <p class="text-slate-300 mb-4">{{ menu.concept.description }}</p>
+        <div class="flex gap-4 text-sm text-slate-400">
+            <span>🍂 {{ menu.concept.seasonality }}</span>
+            <span>💭 {{ menu.concept.philosophical_theme }}</span>
+        </div>
+    </div>
 
-                <!-- Course List -->
-                <div class="space-y-6">
-                    @for (course of project.courses; track $index) {
-                        <div class="bg-white p-6 border border-stone-100 shadow-sm hover:shadow-lg transition-all flex flex-col md:flex-row items-center gap-6 group cursor-pointer relative"
-                             (click)="selectCourse($index)">
-                            
-                            <!-- Number -->
-                            <div class="w-12 h-12 flex-shrink-0 border border-stone-300 flex items-center justify-center font-script text-2xl text-stone-400 group-hover:border-stone-800 group-hover:text-stone-800 transition-colors">
-                                {{ $index + 1 }}
-                            </div>
+    <!-- COURSE LIST or DETAIL VIEW -->
+    @if (selectedCourseIndex() === null) {
 
-                            <!-- Info -->
-                            <div class="flex-grow text-center md:text-left">
-                                <h3 class="font-serif text-2xl italic text-stone-900 mb-2 group-hover:underline decoration-stone-300 underline-offset-4">{{ course.meta.dish_name }}</h3>
-                                <p class="font-serif text-stone-500 text-sm line-clamp-2">{{ course.meta.concept_summary }}</p>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="flex gap-2 items-center">
-                                <!-- REGENERATE BUTTON -->
-                                <button (click)="regenerateCourse($index, $event)" 
-                                        [disabled]="isProcessing()"
-                                        class="w-8 h-8 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:text-stone-900 hover:border-stone-800 transition-all z-10 bg-white cursor-pointer"
-                                        [title]="lang.t().btn_regenerate_course">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" [class.animate-spin]="isProcessing()">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                    </svg>
-                                </button>
-                                
-                                <button class="flex-shrink-0 font-sans text-[10px] uppercase tracking-widest border border-stone-200 px-4 py-2 hover:bg-stone-900 hover:text-white transition-colors cursor-pointer">
-                                    {{ lang.t().btn_view_course }}
-                                </button>
-                            </div>
+        <!-- COURSES GRID -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-slate-300 mb-4">{{ lang.t().menu_ws_courses }} ({{ menu.courses.length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (course of menu.courses; track course.meta.dish_name; let i = $index) {
+                    <div class="bg-slate-700/50 rounded-xl p-4 hover:bg-slate-700 transition-all">
+                        <div class="flex items-start justify-between mb-2">
+              <span class="bg-amber-500 text-slate-900 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                {{ i + 1 }}
+              </span>
+                            <span class="text-xs text-slate-400">{{ course.meta.dish_category }}</span>
                         </div>
-                    }
-                </div>
-            </div>
-        }
-
-        <!-- DETAIL MODE -->
-        @if (selectedCourseIndex() !== null) {
-            <div class="animate-fade-in">
-                <button (click)="backToOverview()" class="mb-6 flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors font-sans text-xs uppercase tracking-widest font-bold cursor-pointer">
-                    <span>&larr;</span> {{ lang.t().btn_back_to_menu }}
-                </button>
-                
-                <!-- Reuse Existing Recipe View -->
-                @if (project.courses[selectedCourseIndex()!]; as course) {
-                    <!-- Sages specific to this course -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                        <app-sage-card type="SCIENTIST" [data]="course.sages_council.scientist"></app-sage-card>
-                        <app-sage-card type="ARTIST" [data]="course.sages_council.artist"></app-sage-card>
-                        <app-sage-card type="HISTORIAN" [data]="course.sages_council.historian"></app-sage-card>
-                        <app-sage-card type="PHILOSOPHER" [data]="course.sages_council.philosopher"></app-sage-card>
+                        <h4 class="font-semibold text-white mb-1">{{ course.meta.dish_name }}</h4>
+                        <p class="text-slate-400 text-sm mb-3 line-clamp-2">{{ course.meta.concept_summary }}</p>
+                        <div class="flex gap-2">
+                            <button
+                                    (click)="viewCourse(i)"
+                                    class="flex-1 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-medium">
+                                {{ lang.t().btn_view_course }}
+                            </button>
+                            <button
+                                    (click)="regenerateCourse(i)"
+                                    [disabled]="isUpdating()"
+                                    class="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm">
+                                🔄
+                            </button>
+                        </div>
                     </div>
-
-                    <app-recipe-view [data]="course.maestro_synthesis" [meta]="course.meta"></app-recipe-view>
                 }
             </div>
-        }
+        </div>
 
-    </div>
-</div>
+    } @else {
 
-<!-- ============================================== -->
-<!-- ECONOMIC ANALYSIS MODAL -->
-<!-- ============================================== -->
-@if (showAnalysisModal()) {
-    <div class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 print:hidden">
-        <div class="bg-white max-w-2xl w-full rounded-lg shadow-2xl flex flex-col max-h-[90vh]">
-            
-            <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50 rounded-t-lg">
-                <h3 class="font-serif italic text-2xl text-stone-800">{{ lang.t().ma_report_title }}</h3>
-                <button (click)="closeAnalysisModal()" class="text-stone-400 hover:text-stone-800 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+        <!-- COURSE DETAIL -->
+        <div class="mb-6">
+            <button
+                    (click)="backToMenu()"
+                    class="mb-4 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">
+                ← {{ lang.t().btn_back_to_menu }}
+            </button>
 
-            <div class="flex-grow overflow-y-auto p-8">
-                @if (isAnalyzing()) {
-                    <div class="flex flex-col items-center justify-center py-12">
-                         <div class="w-12 h-12 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-4"></div>
-                         <p class="font-sans text-xs uppercase tracking-widest text-stone-500">{{ lang.t().msg_analyzing_costs }}</p>
-                         <p class="text-[10px] text-stone-400 mt-2">Powered by Google Search Grounding</p>
-                    </div>
-                } @else if (marketReport()) {
-                    <div class="animate-fade-in">
-                        <p class="font-serif text-lg leading-relaxed text-stone-700 italic mb-8 border-l-4 border-stone-300 pl-4">
-                            "{{ marketReport()!.financial_narrative }}"
-                        </p>
+            @if (selectedCourse; as course) {
+                <div class="bg-slate-700/30 rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-amber-400 mb-2">{{ course.meta.dish_name }}</h3>
+                    <p class="text-slate-400 mb-4">{{ course.meta.concept_summary }}</p>
 
-                        <!-- Overview Cards -->
-                        <div class="grid grid-cols-3 gap-4 mb-8">
-                             <div class="bg-stone-50 p-4 rounded text-center border border-stone-200">
-                                 <span class="block text-[10px] uppercase text-stone-400">{{ lang.t().ma_total_cost }}</span>
-                                 <span class="block text-2xl font-mono text-red-800 font-bold">€{{ marketReport()!.overall_pour_cost | number:'1.2-2' }}</span>
-                             </div>
-                             <div class="bg-stone-50 p-4 rounded text-center border border-stone-200">
-                                 <span class="block text-[10px] uppercase text-stone-400">{{ lang.t().ma_rec_price }}</span>
-                                 <span class="block text-2xl font-mono text-green-800 font-bold">€{{ marketReport()!.recommended_price_per_pax | number:'1.2-2' }}</span>
-                             </div>
-                             <div class="bg-stone-50 p-4 rounded text-center border border-stone-200">
-                                 <span class="block text-[10px] uppercase text-stone-400">{{ lang.t().ma_margin }}</span>
-                                 <span class="block text-2xl font-mono text-stone-800 font-bold">{{ marketReport()!.target_margin }}%</span>
-                             </div>
-                        </div>
-
-                        <!-- Breakdown Table -->
-                        <h4 class="font-sans text-xs uppercase tracking-widest font-bold mb-4">{{ lang.t().ma_breakdown_title }}</h4>
-                        <table class="w-full text-sm text-left">
-                            <thead class="text-[10px] uppercase bg-stone-100 text-stone-500">
-                                <tr>
-                                    <th class="p-2">{{ lang.t().ma_dish }}</th>
-                                    <th class="p-2 text-right">{{ lang.t().ma_cost }}</th>
-                                    <th class="p-2 hidden sm:table-cell">{{ lang.t().ma_exp_ing }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-stone-100">
-                                @for (dish of marketReport()!.dishes_breakdown; track dish.dish_name) {
-                                    <tr>
-                                        <td class="p-2 font-serif font-bold text-stone-800">{{ dish.dish_name }}</td>
-                                        <td class="p-2 text-right font-mono text-red-700">€{{ dish.pour_cost | number:'1.2-2' }}</td>
-                                        <td class="p-2 text-xs text-stone-500 italic hidden sm:table-cell">{{ dish.key_expensive_ingredients.join(', ') }}</td>
-                                    </tr>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-lg font-semibold text-amber-400 mb-2">Ingredienti</h4>
+                            <ul class="grid grid-cols-2 gap-2">
+                                @for (ing of course.maestro_synthesis.ingredients; track ing.name) {
+                                    <li class="text-slate-300">{{ ing.name }} - {{ ing.quantity }}</li>
                                 }
-                            </tbody>
-                        </table>
+                            </ul>
+                        </div>
                     </div>
-                }
-            </div>
+                </div>
+            }
         </div>
-    </div>
-}
+
+    }
+
+    <!-- MARKET REPORT MODAL/SECTION -->
+    @if (marketReport(); as report) {
+        <div class="mt-6 bg-gradient-to-r from-green-900/30 to-slate-800 p-6 rounded-xl">
+            <h3 class="text-xl font-semibold text-green-400 mb-4">{{ lang.t().ma_report_title }}</h3>
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-red-400">€{{ report.overall_food_cost.toFixed(2) }}</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().ma_total_cost }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-green-400">€{{ report.recommended_price_per_pax.toFixed(2) }}</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().ma_rec_price }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-amber-400">{{ report.target_margin }}%</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().ma_margin }}</p>
+                </div>
+            </div>
+            <p class="text-slate-300">{{ report.financial_narrative }}</p>
+        </div>
+    }
+</div>

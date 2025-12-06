@@ -1,45 +1,44 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IngredientAnalysisItem, MarketReport } from '../../core/models/maestro-schema.models';
+import { MarketReport, MaestroSynthesis } from '../../core/models/maestro-schema.models';
 import { LanguageService } from '../../core/services/language.service';
+import { GeminiService } from '../../core/services/gemini.service';
 
 @Component({
-  selector: 'app-market-analysis',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './market-analysis.component.html',
+    selector: 'app-market-analysis',
+    standalone: true,
+    imports: [CommonModule],
+    templateUrl: './market-analysis.component.html'
 })
 export class MarketAnalysisComponent {
-  @Input() data: MarketReport | null = null;
-  readonly lang = inject(LanguageService);
+    @Input() synthesis!: MaestroSynthesis;
 
-  downloadReport() {
-    if (!this.data) return;
+    protected lang = inject(LanguageService);
+    private gemini = inject(GeminiService);
 
-    const date = new Date().toISOString().split('T')[0];
-    let md = `# MARKET ANALYSIS REPORT - ${date}\n\n`;
-    md += `> ${this.data.marketing_hook}\n\n`;
-    md += `### FINANCIAL OVERVIEW\n`;
-    md += `- ${this.lang.t().ma_total_cost}: €${this.data.total_pour_cost}\n`;
-    md += `- ${this.lang.t().ma_rec_price}: €${this.data.suggested_menu_price}\n`;
-    md += `- ${this.lang.t().ma_margin}: ${this.data.profit_margin_percentage}%\n\n`;
-    md += `### STRATEGY\n${this.data.pricing_strategy_note}\n\n`;
-    md += `### COST BREAKDOWN\n`;
-    md += `| ${this.lang.t().col_ingredient} | ${this.lang.t().col_qty} | ${this.lang.t().col_price} | ${this.lang.t().col_cost} | ${this.lang.t().col_trend} |\n`;
-    md += `| --- | --- | --- | --- | --- |\n`;
+    report = signal<MarketReport | null>(null);
+    isLoading = signal(false);
+    error = signal<string | null>(null);
 
-    this.data.cost_breakdown.forEach((item: IngredientAnalysisItem) => {
-      md += `| ${item.ingredient} | ${item.quantity_used} | ${item.market_unit_price} | €${item.calculated_cost} | ${item.market_trend} |\n`;
-    });
+    async analyze() {
+        this.isLoading.set(true);
+        this.error.set(null);
 
-    const blob = new Blob([md], { type: 'text/markdown' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `maestro-market-analysis-${date}.md`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  }
+        try {
+            const result = await this.gemini.analyzeSingleDishMarket(this.synthesis);
+            this.report.set(result);
+        } catch (e: any) {
+            this.error.set(e.message || 'Analysis failed');
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+
+    getTrendIcon(trend: string): string {
+        switch (trend) {
+            case 'RISING': return '📈';
+            case 'FALLING': return '📉';
+            default: return '➡️';
+        }
+    }
 }

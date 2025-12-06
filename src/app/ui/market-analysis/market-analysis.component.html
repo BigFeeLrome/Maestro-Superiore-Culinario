@@ -1,79 +1,79 @@
-@if (data) {
-  <div class="bg-white p-8 rounded-lg border border-stone-100 shadow-xl mt-8 animate-fade-in">
-  
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-stone-200 pb-6">
-      <div class="flex-grow">
-        <h3 class="text-2xl font-serif italic text-stone-900 mb-1">{{ lang.t().market_title }}</h3>
-        <p class="text-stone-500 text-sm font-serif">{{ data.pricing_strategy_note }}</p>
-      </div>
-      <div class="flex items-center gap-4 mt-4 md:mt-0">
-          <div class="text-right">
-            <p class="text-xs uppercase tracking-widest text-stone-500 font-sans">{{ lang.t().market_margin }}</p>
-            <div class="text-3xl font-bold"
-                 [class.text-green-700]="data.profit_margin_percentage >= 70"
-                 [class.text-amber-700]="data.profit_margin_percentage < 70">
-              {{ data.profit_margin_percentage }}%
+<div class="bg-slate-800 rounded-2xl p-6">
+
+    <h3 class="text-xl font-semibold text-amber-400 mb-4">{{ lang.t().ma_single_title }}</h3>
+
+    <!-- ANALYZE BUTTON -->
+    @if (!report() && !isLoading()) {
+        <button
+                (click)="analyze()"
+                class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl transition-all">
+            {{ lang.t().btn_analyze_menu }}
+        </button>
+    }
+
+    <!-- LOADING -->
+    @if (isLoading()) {
+        <div class="text-center py-8">
+            <div class="animate-spin w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-slate-400">{{ lang.t().ma_single_calculating }}</p>
+        </div>
+    }
+
+    <!-- ERROR -->
+    @if (error()) {
+        <div class="bg-red-500/20 text-red-400 p-4 rounded-xl">
+            {{ error() }}
+        </div>
+    }
+
+    <!-- REPORT -->
+    @if (report(); as r) {
+        <div class="space-y-6">
+
+            <!-- SUMMARY CARDS -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-slate-700/50 p-4 rounded-xl text-center">
+                    <p class="text-2xl font-bold text-red-400">€{{ r.total_food_cost.toFixed(2) }}</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().market_total_cost }}</p>
+                </div>
+                <div class="bg-slate-700/50 p-4 rounded-xl text-center">
+                    <p class="text-2xl font-bold text-green-400">€{{ r.suggested_menu_price.toFixed(2) }}</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().market_sugg_price }}</p>
+                </div>
+                <div class="bg-slate-700/50 p-4 rounded-xl text-center">
+                    <p class="text-2xl font-bold text-amber-400">{{ r.profit_margin_percentage }}%</p>
+                    <p class="text-sm text-slate-400">{{ lang.t().market_margin }}</p>
+                </div>
             </div>
-          </div>
-          <button (click)="downloadReport()" class="bg-stone-100 hover:bg-stone-200 text-stone-600 px-3 py-2 rounded-lg text-xs font-bold tracking-wider border border-stone-200 hover:border-stone-300 transition-colors flex items-center gap-2 cursor-pointer">
-              <span>{{ lang.t().market_export }}</span>
-          </button>
-      </div>
-    </div>
 
-    <!-- Big Numbers -->
-    <div class="grid grid-cols-2 gap-4 mb-8">
-      <div class="bg-stone-50 p-4 rounded border border-stone-200">
-        <p class="text-xs text-stone-500 uppercase font-sans">{{ lang.t().market_total_cost }}</p>
-        <p class="text-2xl text-red-800 font-mono">€{{ data.total_pour_cost | number:'1.2-2' }}</p>
-      </div>
-      <div class="bg-stone-50 p-4 rounded border border-stone-200">
-        <p class="text-xs text-stone-500 uppercase font-sans">{{ lang.t().market_sugg_price }}</p>
-        <p class="text-2xl text-green-800 font-mono">€{{ data.suggested_menu_price | number:'1.2-2' }}</p>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-sm text-stone-600">
-        <thead class="text-xs uppercase bg-stone-50 text-stone-500 font-sans">
-          <tr>
-            <th class="px-4 py-3 rounded-tl">{{ lang.t().col_ingredient }}</th>
-            <th class="px-4 py-3">{{ lang.t().col_qty }}</th>
-            <th class="px-4 py-3">{{ lang.t().col_price }}</th>
-            <th class="px-4 py-3 text-right">{{ lang.t().col_cost }}</th>
-            <th class="px-4 py-3 rounded-tr text-center">{{ lang.t().col_trend }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-stone-100">
-          @for (item of data.cost_breakdown; track item.ingredient) {
-            <tr class="hover:bg-stone-50/50 transition-colors">
-              <td class="px-4 py-3 font-medium text-stone-800">{{ item.ingredient }}</td>
-              <td class="px-4 py-3 text-cyan-800">{{ item.quantity_used }}</td>
-              <td class="px-4 py-3 text-stone-500 font-mono text-xs">{{ item.market_unit_price }}</td>
-              <td class="px-4 py-3 text-right text-red-700 font-mono">€{{ item.calculated_cost | number:'1.2-2' }}</td>
-              <td class="px-4 py-3 text-center">
-                <span class="text-[10px] px-2 py-0.5 rounded font-sans"
-                      [class.text-red-800]="item.market_trend === 'RISING'"
-                      [class.bg-red-100]="item.market_trend === 'RISING'"
-                      [class.text-green-800]="item.market_trend === 'FALLING'"
-                      [class.bg-green-100]="item.market_trend === 'FALLING'"
-                      [class.text-stone-500]="item.market_trend === 'STABLE'"
-                      [class.bg-stone-100]="item.market_trend === 'STABLE'">
-                  {{ item.market_trend }}
-                </span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Footer -->
-    <div class="mt-8 pt-6 border-t border-stone-200">
-      <p class="text-xs text-stone-500 uppercase tracking-widest mb-2 font-sans">{{ lang.t().market_narrative }}</p>
-      <p class="text-stone-700 italic font-serif leading-relaxed">"{{ data.marketing_hook }}"</p>
-    </div>
-  </div>
-}
+            <!-- COST BREAKDOWN TABLE -->
+            <div>
+                <h4 class="text-lg font-semibold text-amber-400 mb-3">Cost Breakdown</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-2 text-slate-400">{{ lang.t().col_ingredient }}</th>
+                            <th class="text-left py-2 text-slate-400">{{ lang.t().col_qty }}</th>
+                            <th class="text-left py-2 text-slate-400">{{ lang.t().col_price }}</th>
+                            <th class="text-right py-2 text-slate-400">{{ lang.t().col_cost }}</th>
+                            <th class="text-center py-2 text-slate-400">{{ lang.t().col_trend }}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            @for (item of r.cost_breakdown; track item.ingredient) {
+                                <tr class="border-b border-slate-700/50">
+                                    <td class="py-2 text-white">{{ item.ingredient }}</td>
+                                    <td class="py-2 text-slate-300">{{ item.quantity_used }}</td>
+                                    <td class="py-2 text-slate-300">{{ item.market_unit_price }}</td>
+                                    <td class="py-2 text-right text-amber-400">€{{ item.calculated_cost.toFixed(2) }}</td>
+                                    <td class="py-2 text-center">{{ getTrendIcon(item.market_trend) }}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

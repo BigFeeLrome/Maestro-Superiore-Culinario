@@ -74,7 +74,7 @@
 
           <!-- CASE B: MENU WORKSPACE -->
           @if (mode === 'MENU' && menuResponse(); as menu) {
-             <app-menu-workspace [project]="menu"></app-menu-workspace>
+             <app-menu-workspace [menu]="menu"></app-menu-workspace>
              
              <!-- Reset Button (Below workspace) -->
              <div class="text-center mt-16 pb-16 select-none print:hidden">

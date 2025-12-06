@@ -21,10 +21,12 @@ export interface RecipeStep {
   technical_note?: string; // The "Scientist" tip (e.g. "Shake unti tins frost")
 }
 
-export interface GlasswareGuide {
-  glass_type: string; // e.g. "Coupe", "Nick & Nora", "Highball"
-  ice_type: string;   // e.g. "Clear Cube", "Crushed", "None/Neat"
-  garnish_detail: string;
+export interface PlatingGuide {
+    container: string;
+    arrangement: string;
+    // garnish_detail: string; // OLD
+    finishing_touch: string;   // NEW - Food Standard
+    garnish_detail?: string;   // Optional backward compatibility
 }
 
 export interface SensoryProfile {
@@ -44,7 +46,8 @@ export interface MaestroSynthesis {
   rationale: string;
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
-  glassware_guide: GlasswareGuide;
+  // FOOD domain
+  plating_guide: PlatingGuide;
   sensory_profile: SensoryProfile;
   homemade_preps?: HomemadePrep[]; // Optional array for custom ingredients
 }
@@ -57,9 +60,14 @@ export interface MaestroResponse {
     preparation_time_minutes: number; // Renamed from execution_time
     difficulty_level: ExpertiseLevel;
     philosophical_pillar_alignment: string;
-    abv_estimate: string; // e.g. "18% ABV"
-    calories_estimate: number; // New: e.g. 180 (Kcal)
-    drink_category: string; // e.g. "Sour", "Spirit-Forward"
+    // FOOD domain
+    calories_estimate: number; // e.g. 650 (Kcal)
+    dish_category: string; // e.g. "Primo", "Dessert"
+    macros?: {
+      proteins_grams: number;
+      carbs_grams: number;
+      fats_grams: number;
+    };
   };
   sages_council: {
     scientist: SageAnalysis;
@@ -126,22 +134,29 @@ export interface SessionEntry {
 export interface IngredientAnalysisItem {
   ingredient: string;
   quantity_used: string;       // es. "60ml"
-  market_unit_price: string;   // es. "€30.00 / 700ml"
+  market_unit_price: string;   // es. "€8.50 / kg" o "€2.00 / unit"
   calculated_cost: number;     // es. 2.50
   market_trend: 'STABLE' | 'RISING' | 'FALLING';
   // New Nutritional Data
-  abv_content: string;         // e.g. "40%"
-  calories: number;            // e.g. 140 (Kcal for this quantity)
+  calories?: number;            // e.g. 140 (Kcal for this quantity)
+  proteins_grams?: number;
+  carbs_grams?: number;
+  fats_grams?: number;
+  allergens?: string[];
 }
 
 export interface NutritionalProfile {
-  final_abv: string;           // e.g. "19.5% Vol" (Post-dilution)
-  total_calories: number;      // e.g. 210 Kcal
-  dilution_factor: string;     // e.g. "~25% Water added via Shake"
+  total_calories: number;      // e.g. 650 Kcal
+  proteins_grams?: number;
+  carbs_grams?: number;
+  fats_grams?: number;
+  fiber_grams?: number;
+  allergens?: string[];        // e.g. ["Gluten", "Lactose", "Nuts"]
 }
 
 export interface MarketReport {
-  total_pour_cost: number; 
+  // FOOD domain
+  total_food_cost: number;
   suggested_menu_price: number;
   profit_margin_percentage: number;
   cost_breakdown: IngredientAnalysisItem[]; // Updated type
@@ -158,12 +173,14 @@ export interface PhotoPrompt {
 // 9. Global Menu Market Analysis (Phase 3)
 export interface DishFinancialSummary {
   dish_name: string;
-  pour_cost: number; 
+  // FOOD domain primary
+  food_cost: number; 
   key_expensive_ingredients: string[];
 }
 
 export interface MenuMarketReport {
-  overall_pour_cost: number; 
+  // FOOD domain primary
+  overall_food_cost: number; 
   recommended_price_per_pax: number; 
   target_margin: number;
   financial_narrative: string;

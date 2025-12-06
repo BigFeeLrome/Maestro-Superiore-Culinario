@@ -8,7 +8,7 @@ import { ExpertiseLevel } from '../../core/models/maestro-schema.models';
 import { InputWizardComponent } from '../../ui/input-wizard/input-wizard.component';
 import { RecipeViewComponent } from '../../ui/recipe-view/recipe-view.component';
 import { SageCardComponent } from '../../ui/sage-card/sage-card.component';
-import { MenuWorkspaceComponent } from '../../ui/menu-workspace/menu-workspace.component';
+import { MenuWorkspaceComponent } from '../../ui/menu-workspace/Menu-WorkspaceComponent';
 import { MenuAnalysisComponent } from '../../ui/menu-analysis/menu-analysis.component';
 
 @Component({

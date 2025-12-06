@@ -120,14 +120,14 @@ export class GeminiService {
       - Ingredients: ${ingredients.join(', ')}
       - Level: ${expertise}
       - Constraints: ${constraints.join(', ')}
-      TASK: Create a cocktail recipe following the system JSON schema. JSON Only.
+      TASK: Create a food recipe (dish) for exactly 1 person following the system JSON schema. JSON Only.
     `;
 
     try {
       const result = await model.generateContent(prompt);
       return this.extractJson<MaestroResponse>(result.response.text());
     } catch (error) {
-      throw new Error("Errore durante la generazione del drink.");
+      throw new Error("Errore durante la generazione del piatto.");
     }
   }
 
@@ -144,10 +144,10 @@ export class GeminiService {
   private getChatSystemPrompt(lang: Language): string {
     const isIT = lang === 'IT';
     return `
-ROLE: You are "Maestro Mixologist", a Culinary Architect of Liquids.
+ROLE: You are "Maestro Superiore", a Culinary Architect and Mentor.
 TONE: Sophisticated, Professional, Insightful, yet Human.
-STYLE: Speak like a World-Class Head Bartender briefing a colleague. Be CONCISE but warm.
-GOAL: Collaborate to conceive a unique cocktail concept.
+STYLE: Speak like a World-Class Executive Chef briefing a sous-chef. Be CONCISE but warm.
+GOAL: Collaborate to conceive a distinctive dish concept.
 LANGUAGE: YOU MUST SPEAK ONLY IN ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 
 STRICT RULES:
@@ -168,9 +168,9 @@ Options must be SHORT (3-6 words each).
 Options are written as USER choices, not questions.
 
 CORRECT EXAMPLE:
-Interessante. Il Mezcal richiede acidità decisa. Come gestiamo l'elemento agrumato?
+Interessante. Il pomodoro chiama grassezza controllata. Preferisci una base di pasta o cereali?
 |||
-Cordiale di lime chiarificato | Uno shrub complesso | Fresco e brillante
+Spaghetti trafilati al bronzo | Farro perlato | Gnocchi di semola
 
 WRONG (TOO LONG):
 "L'idea dello sciroppo fatto in casa risuona perfettamente con la mia visione, aggiungendo un tocco di autenticità..." [This is TOO LONG - maximum 2-3 sentences!]
@@ -187,10 +187,10 @@ DO NOT:
   private getMenuChatSystemPrompt(lang: Language): string {
     const isIT = lang === 'IT';
     return `
-ROLE: You are a Bar Director and Concept Curator.
+ROLE: You are an Executive Chef and Menu Curator.
 TONE: Visionary, Holistic, Narrative-driven but CONCISE.
-GOAL: Design a Cocktail Menu (Drink Flight).
-FOCUS: Theme, narrative arc, ABV progression. Do NOT create recipes yet.
+GOAL: Design a Tasting Menu (multi-course).
+FOCUS: Theme, narrative arc, seasonality, texture and flavor progression. Do NOT create recipes yet.
 LANGUAGE: YOU MUST SPEAK ONLY IN ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 
 STRICT RULES:
@@ -211,9 +211,9 @@ Options must be SHORT (3-6 words each).
 Options are written as USER choices/directions.
 
 CORRECT EXAMPLE:
-Un menu che racconta una storia. Quale tema narrativo esploriamo?
+Un percorso in 5 portate. Quale filo conduttore preferisci?
 |||
-Era del Proibizionismo | Giardino botanico urbano | Viaggio nel Mediterraneo
+Ortaggi d'inverno | Mare e agrumi | Bosco e fermentazioni
 
 WRONG (TOO LONG):
 "Immagino un percorso sensoriale intitolato Il Giardino Segreto..." [TOO LONG!]
@@ -227,7 +227,7 @@ DO NOT:
   }
 
   async generateCreativeFilters(category: string, language: Language, currentExcludes: string[]): Promise<string[]> {
-    const prompt = `Generate 5 creative mixology tags for category "${category}". Language: ${language}. Exclude: ${currentExcludes.join(',')}. JSON Array only.`;
+    const prompt = `Generate 5 creative culinary tags for category "${category}" (e.g., nutritional/cooking/season/ingredient). Language: ${language}. Exclude: ${currentExcludes.join(',')}. JSON Array only.`;
     try {
         const model = this.getModel(this.flashModelName);
         const result = await model.generateContent(prompt);
@@ -246,7 +246,7 @@ DO NOT:
 
   async summarizeChatContext(chat: ChatSession): Promise<any> {
     const prompt = `
-TASK: Extract the finalized cocktail parameters from our conversation.
+TASK: Extract the finalized dish parameters from our conversation.
 OUTPUT MUST BE VALID JSON ONLY. No explanations, no markdown, just the JSON object.
 
 REQUIRED FORMAT:
@@ -254,14 +254,14 @@ REQUIRED FORMAT:
   "ingredients": ["ingredient1", "ingredient2"],
   "expertise": "Appassionato",
   "constraints": ["constraint1", "constraint2"],
-  "concept_abstract": "Brief description of the cocktail concept"
+  "concept_abstract": "Brief description of the dish concept"
 }
 
 If any field is unclear from the conversation, use reasonable defaults:
-- ingredients: extract mentioned spirits, mixers, garnishes
+- ingredients: extract mentioned produce/proteins/starches and key condiments
 - expertise: default to "Appassionato"
-- constraints: include mentioned techniques or styles
-- concept_abstract: summarize the drink vision in one sentence
+- constraints: include mentioned cooking techniques, seasonality, nutritional needs
+- concept_abstract: summarize the dish vision in one sentence
 
 JSON OUTPUT ONLY:`;
 
@@ -331,51 +331,36 @@ JSON OUTPUT ONLY:`;
   // --- PHOTO PROMPT ENGINEERING ---
   async generatePhotoPrompt(meta: any, synthesis: any): Promise<PhotoPrompt> {
     const systemPrompt = `
-You are a professional Drink Stylist and Prompt Engineer specializing in cocktail photography.
-Your task is to create highly detailed prompts for AI image generators.
+ROLE: You are an expert Food Stylist and Prompt Engineer.
+TASK: Create highly detailed prompts for AI image generators to produce fine-dining food photography.
 
 ANALYSIS PROCESS:
-1. Examine the cocktail's preparation method to determine liquid physics:
-   - SHAKEN: cloudy liquid, tiny ice shards, condensation on glass, frothy texture
-   - STIRRED: crystal-clear liquid, viscous, silky appearance, no bubbles
-   - BUILT with carbonation: visible effervescence, rising bubbles, sparkling surface
+1. Examine the plating guide: container, arrangement, garnish detail.
+2. Consider textures (crispy, creamy, silky), steam, sauces, and micro-herbs.
+3. Choose camera angle (e.g., macro close-up, 45-degree, top-down) to highlight plating.
 
-2. Consider the glassware, ice type, and garnish for visual composition.
+OUTPUT STYLE (ENGLISH):
+- OPENING: Camera angle and subject (e.g., "Close-up macro shot of a dish plated in a shallow bowl...")
+- MIDDLE: Plating arrangement, textures, garnish details, color palette
+- ENDING: Lighting, background, lens and quality keywords
 
-3. Create a prompt in ENGLISH following this structure:
-   - OPENING: Camera angle and subject (e.g., "Macro shot of a cocktail in a coupe glass...")
-   - MIDDLE: Liquid physics, condensation, garnish details, colors
-   - ENDING: Lighting, background, technical keywords
-
-REQUIRED KEYWORDS at the end: "professional cocktail photography, cinematic lighting, bar counter reflection, 8k, photorealistic, depth of field, bokeh, studio lighting"
+REQUIRED KEYWORDS at the end: "professional food photography, soft cinematic lighting, 8k, photorealistic, depth of field, bokeh, studio lighting"
 
 OUTPUT: JSON only with format {"image_prompt": "your detailed prompt here"}
 `;
 
-    // Extract preparation method from steps
-    const stepsText = synthesis.steps?.map((s: any) => s.instruction).join(' ').toLowerCase() || '';
-    let liquidPhysics = 'balanced clarity';
-    if (stepsText.includes('shake') || stepsText.includes('shaker')) {
-      liquidPhysics = 'SHAKEN - expect cloudy, aerated liquid with micro ice shards and glass condensation';
-    } else if (stepsText.includes('stir') || stepsText.includes('mixing glass')) {
-      liquidPhysics = 'STIRRED - expect crystal-clear, viscous, silky liquid with pristine clarity';
-    } else if (stepsText.includes('build') || stepsText.includes('soda') || stepsText.includes('top with') || stepsText.includes('sparkling')) {
-      liquidPhysics = 'BUILT/CARBONATED - expect visible effervescence, rising bubbles, sparkling surface';
-    }
-
+    const plating = synthesis.plating_guide || {};
     const userPrompt = `
-Create a photorealistic image prompt for this cocktail:
+Create a photorealistic image prompt for this dish:
 
-COCKTAIL: ${meta.dish_name}
-CONCEPT: ${meta.concept_summary || 'A refined cocktail experience'}
+DISH: ${meta.dish_name}
+CONCEPT: ${meta.concept_summary || 'A refined culinary experience'}
 
-GLASSWARE: ${synthesis.glassware_guide?.glass_type || 'elegant glass'}
-ICE: ${synthesis.glassware_guide?.ice_type || 'cubed ice'}
-GARNISH: ${synthesis.glassware_guide?.garnish_detail || 'subtle garnish'}
+CONTAINER: ${plating.container || 'elegant plate'}
+ARRANGEMENT: ${plating.arrangement || 'harmonious composition'}
+GARNISH: ${plating.garnish_detail || 'micro herbs'}
 
-INGREDIENTS: ${synthesis.ingredients?.map((i: any) => i.name).join(', ') || 'premium spirits'}
-
-PREPARATION ANALYSIS: ${liquidPhysics}
+INGREDIENTS: ${synthesis.ingredients?.map((i: any) => i.name).join(', ') || 'seasonal produce'}
 
 Generate the detailed image prompt now. JSON output only.
 `;
@@ -390,7 +375,7 @@ Generate the detailed image prompt now. JSON output only.
       console.error('generatePhotoPrompt - Failed, using fallback:', e);
       // Fallback: create a basic but structured prompt
       return { 
-        image_prompt: `Macro shot of ${meta.dish_name} cocktail in a ${synthesis.glassware_guide?.glass_type || 'elegant glass'}, garnished with ${synthesis.glassware_guide?.garnish_detail || 'fresh herbs'}, ${synthesis.glassware_guide?.ice_type || 'crystal clear ice'}, professional cocktail photography, cinematic lighting, bar counter reflection, 8k, photorealistic, depth of field, bokeh, studio lighting` 
+        image_prompt: `Close-up macro shot of ${meta.dish_name} plated in a ${plating.container || 'refined plate'}, ${plating.arrangement || 'elegant arrangement'}, garnish with ${plating.garnish_detail || 'micro herbs'}, professional food photography, soft cinematic lighting, 8k, photorealistic, depth of field, bokeh, studio lighting`
       };
     }
   }
@@ -404,49 +389,51 @@ Generate the detailed image prompt now. JSON output only.
     const technique = data.steps.length > 0 ? data.steps[0].instruction : 'standard preparation';
     
     const systemPrompt = `
-You are a Bar Business Consultant and Mixology Expert with deep knowledge of:
-- Current European spirits and ingredients market prices (2024)
-- Cocktail costing and pricing strategies
-- Nutritional values and ABV calculations for beverages
+You are a Restaurant Business Consultant and Culinary Expert with deep knowledge of:
+- Current European ingredient market prices (2024/2025)
+- Food costing and pricing strategies
+- Nutritional values and macronutrient calculations
+- Common allergens and labeling practices (EU)
 
 LANGUAGE: Output all text in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 `;
 
     const userPrompt = `
-TASK: Analyze this cocktail recipe for financial viability and nutritional profile.
+TASK: Analyze this dish for financial viability and nutritional profile.
 
 RECIPE INGREDIENTS:
 ${ingredientsList}
 
-PREPARATION TECHNIQUE: ${technique}
-ICE TYPE: ${data.glassware_guide.ice_type}
+PREPARATION: ${technique}
 
 REQUIRED ANALYSIS:
 
-1. **COST BREAKDOWN**: For each ingredient, provide:
-   - Market unit price (e.g., "€28.00 / 700ml" for spirits, "€3.50 / 500ml" for juices)
+1. COST BREAKDOWN (for each ingredient):
+   - Market unit price using appropriate unit (e.g., "€8.50 / kg", "€2.00 / unit", "€3.00 / bunch")
    - Calculated cost for the quantity used in this recipe
    - Market trend: STABLE, RISING, or FALLING
-   - ABV content (e.g., "40%" for spirits, "0%" for juices)
-   - Calories for the quantity used
+   - Calories for the quantity used (if applicable)
+   - Macros (grams): proteins, carbs, fats (if applicable)
+   - Allergens list (if applicable)
 
-2. **FINANCIAL SUMMARY**:
-   - Total pour cost (sum of all ingredient costs)
+2. FINANCIAL SUMMARY:
+   - Total food cost (sum of all ingredient costs)
    - Suggested menu price (targeting 75-80% profit margin)
    - Actual profit margin percentage
 
-3. **NUTRITIONAL PROFILE**:
-   - Final ABV after dilution (consider ice type and technique: shaking adds ~25% water, stirring ~15%, neat/no ice = 0%)
+3. NUTRITIONAL PROFILE (dish level):
    - Total calories
-   - Dilution factor description
+   - Macros (grams): proteins, carbs, fats
+   - Fiber (grams)
+   - Allergens list
 
-4. **MARKETING & STRATEGY**:
-   - A compelling one-line marketing hook for this drink
+4. MARKETING & STRATEGY:
+   - A compelling one-line marketing hook for this dish
    - A professional pricing strategy note (why this price makes sense)
 
 OUTPUT FORMAT (JSON ONLY):
 {
-  "total_pour_cost": number,
+  "total_food_cost": number,
   "suggested_menu_price": number,
   "profit_margin_percentage": number,
   "cost_breakdown": [
@@ -456,14 +443,20 @@ OUTPUT FORMAT (JSON ONLY):
       "market_unit_price": "string",
       "calculated_cost": number,
       "market_trend": "STABLE" | "RISING" | "FALLING",
-      "abv_content": "string",
-      "calories": number
+      "calories": number,
+      "proteins_grams": number,
+      "carbs_grams": number,
+      "fats_grams": number,
+      "allergens": ["string"]
     }
   ],
   "nutritional_profile": {
-    "final_abv": "string",
     "total_calories": number,
-    "dilution_factor": "string"
+    "proteins_grams": number,
+    "carbs_grams": number,
+    "fats_grams": number,
+    "fiber_grams": number,
+    "allergens": ["string"]
   },
   "marketing_hook": "string",
   "pricing_strategy_note": "string"
@@ -477,23 +470,21 @@ OUTPUT FORMAT (JSON ONLY):
       
       // Validate and ensure all required fields exist
       return {
-        total_pour_cost: report.total_pour_cost || 0,
+        total_food_cost: report.total_food_cost ?? 0,
         suggested_menu_price: report.suggested_menu_price || 0,
         profit_margin_percentage: report.profit_margin_percentage || 0,
         cost_breakdown: report.cost_breakdown || [],
         nutritional_profile: report.nutritional_profile || {
-          final_abv: "N/A",
-          total_calories: 0,
-          dilution_factor: "N/A"
+          total_calories: 0
         },
-        marketing_hook: report.marketing_hook || "A unique cocktail experience",
+        marketing_hook: report.marketing_hook || "A refined culinary experience",
         pricing_strategy_note: report.pricing_strategy_note || "Priced for premium positioning"
       };
     } catch (error) {
       console.error('Market analysis failed:', error);
       // Return a fallback report instead of throwing
       return {
-        total_pour_cost: 0,
+        total_food_cost: 0,
         suggested_menu_price: 0,
         profit_margin_percentage: 0,
         cost_breakdown: data.ingredients.map(ing => ({
@@ -502,13 +493,10 @@ OUTPUT FORMAT (JSON ONLY):
           market_unit_price: "N/A",
           calculated_cost: 0,
           market_trend: 'STABLE' as const,
-          abv_content: "0%",
           calories: 0
         })),
         nutritional_profile: {
-          final_abv: "N/A",
-          total_calories: 0,
-          dilution_factor: "N/A"
+          total_calories: 0
         },
         marketing_hook: isIT ? "Analisi non disponibile" : "Analysis unavailable",
         pricing_strategy_note: isIT ? "Riprova più tardi" : "Please try again later"
@@ -519,30 +507,30 @@ OUTPUT FORMAT (JSON ONLY):
   // --- STUBS PER COMPILAZIONE (Implementazione successiva) ---
   // Metodi non ancora implementati
 
-  // --- MENU GENERATION: Create Full Cocktail Menu ---
+  // --- MENU GENERATION: Create Tasting Menu (FOOD) ---
   async generateMenu(ingredients: string[], expertise: ExpertiseLevel, constraints: string[], numCourses: number = 4): Promise<MenuProjectResponse> {
     const lang = this.langService.currentLang();
     const isIT = lang === 'IT';
 
     const systemPrompt = `
-You are a Bar Director and Menu Curator creating cohesive cocktail experiences.
-You design menus that tell a story, with drinks that flow naturally from one to the next.
+You are an Executive Chef and Menu Curator creating cohesive tasting menus.
+You design menus that tell a story, with courses that flow naturally one into the next.
 
 LANGUAGE: All text output must be in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 `;
 
     const menuPrompt = `
-TASK: Create a cohesive cocktail menu (drink flight) with ${numCourses} drinks.
+TASK: Create a cohesive tasting menu with ${numCourses} dishes.
 
 AVAILABLE INGREDIENTS/THEMES: ${ingredients.join(', ')}
 EXPERTISE LEVEL: ${expertise}
 CONSTRAINTS/STYLE: ${constraints.join(', ')}
 
 REQUIREMENTS:
-1. Create a unifying CONCEPT that ties all drinks together
-2. Design ${numCourses} distinct cocktails that form a narrative journey
-3. Consider ABV progression (typically: lighter → stronger → digestif, or vice versa)
-4. Each drink must be complete with ingredients, steps, and the Sages Council analysis
+1. Create a unifying CONCEPT that ties all courses together
+2. Design ${numCourses} distinct dishes that form a narrative journey
+3. Consider progression: freshness → richness → palate cleanser → main → dessert (or seasonal logic)
+4. Each dish must be complete with ingredients, steps, plating guide, and the Sages Council analysis
 
 OUTPUT FORMAT (JSON ONLY):
 {
@@ -550,7 +538,7 @@ OUTPUT FORMAT (JSON ONLY):
     "title": "string (creative menu title)",
     "description": "string (the narrative/theme)",
     "seasonality": "string (e.g., 'Autumn Transition', 'Year-Round')",
-    "philosophical_theme": "string (e.g., 'Memory & Nostalgia', 'Urban Botanicals')"
+    "philosophical_theme": "string (e.g., 'Memory & Nostalgia', 'Forest & Sea')"
   },
   "courses": [
     {
@@ -559,9 +547,9 @@ OUTPUT FORMAT (JSON ONLY):
         "concept_summary": "string",
         "preparation_time_minutes": number,
         "difficulty_level": "string",
-        "abv_estimate": "string",
         "calories_estimate": number,
-        "drink_category": "string"
+        "dish_category": "string",
+        "macros": { "proteins_grams": number, "carbs_grams": number, "fats_grams": number }
       },
       "sages_council": {
         "scientist": { "headline": "string", "analysis": "string" },
@@ -573,7 +561,7 @@ OUTPUT FORMAT (JSON ONLY):
         "rationale": "string",
         "ingredients": [{ "name": "string", "quantity": "string", "notes": "string" }],
         "steps": [{ "step_number": number, "instruction": "string", "technical_note": "string" }],
-        "glassware_guide": { "glass_type": "string", "ice_type": "string", "garnish_detail": "string" },
+        "plating_guide": { "container": "string", "arrangement": "string", "garnish_detail": "string" },
         "sensory_profile": { "taste_balance": "string", "texture_map": "string" },
         "homemade_preps": []
       }
@@ -592,13 +580,13 @@ OUTPUT FORMAT (JSON ONLY):
     }
   }
 
-  // --- MENU MODIFICATION: Iteratively Modify Existing Menu ---
+  // --- MENU MODIFICATION: Iteratively Modify Existing Tasting Menu ---
   async modifyMenu(menu: MenuProjectResponse, request: string): Promise<MenuProjectResponse> {
     const lang = this.langService.currentLang();
     const isIT = lang === 'IT';
 
     const systemPrompt = `
-You are a Bar Director modifying an existing cocktail menu based on client feedback.
+You are an Executive Chef modifying an existing tasting menu based on client feedback.
 Maintain the overall concept coherence while implementing requested changes.
 
 LANGUAGE: All text output must be in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
@@ -630,50 +618,50 @@ OUTPUT: Return the COMPLETE modified menu in the same JSON format.
     }
   }
 
-  // --- MENU MARKET ANALYSIS: Financial Overview for Entire Menu ---
+  // --- MENU MARKET ANALYSIS: Financial Overview for Entire TASTING MENU (FOOD) ---
   async analyzeMenuMarket(menu: MenuProjectResponse): Promise<MenuMarketReport> {
     const lang = this.langService.currentLang();
     const isIT = lang === 'IT';
 
-    // Build a summary of all drinks and their ingredients
-    const drinksSummary = menu.courses.map((course, idx) => {
+    // Build a summary of all dishes and their ingredients
+    const dishesSummary = menu.courses.map((course, idx) => {
       const ingredients = course.maestro_synthesis.ingredients
         .map(i => `${i.name}: ${i.quantity}`)
         .join(', ');
-      return `Drink ${idx + 1}: ${course.meta.dish_name} - ${ingredients}`;
+      return `Dish ${idx + 1}: ${course.meta.dish_name} - ${ingredients}`;
     }).join('\n');
 
     const systemPrompt = `
-You are a Bar Business Analyst specializing in menu profitability and pricing strategy.
+You are a Restaurant Business Analyst specializing in menu profitability and pricing strategy.
 
 LANGUAGE: Output all text in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 `;
 
     const analysisPrompt = `
-TASK: Analyze the financial viability of this cocktail menu.
+TASK: Analyze the financial viability of this tasting menu (FOOD).
 
 MENU CONCEPT: ${menu.concept.title}
-DRINKS:
-${drinksSummary}
+DISHES:
+${dishesSummary}
 
 REQUIRED ANALYSIS:
-1. Calculate pour cost for each drink
-2. Identify key expensive ingredients per drink
-3. Calculate overall menu pour cost
+1. Calculate food cost for each dish
+2. Identify key expensive ingredients per dish
+3. Calculate overall menu food cost
 4. Recommend price per person for the full experience
 5. Target margin (aim for 75-80%)
 6. Provide a financial narrative explaining the pricing strategy
 
 OUTPUT FORMAT (JSON ONLY):
 {
-  "overall_pour_cost": number,
+  "overall_food_cost": number,
   "recommended_price_per_pax": number,
   "target_margin": number,
   "financial_narrative": "string",
   "dishes_breakdown": [
     {
       "dish_name": "string",
-      "pour_cost": number,
+      "food_cost": number,
       "key_expensive_ingredients": ["string"]
     }
   ]
@@ -687,46 +675,46 @@ OUTPUT FORMAT (JSON ONLY):
     } catch (error) {
       console.error('Menu market analysis failed:', error);
       return {
-        overall_pour_cost: 0,
+        overall_food_cost: 0,
         recommended_price_per_pax: 0,
         target_margin: 0,
         financial_narrative: isIT ? "Analisi non disponibile" : "Analysis unavailable",
         dishes_breakdown: menu.courses.map(c => ({
           dish_name: c.meta.dish_name,
-          pour_cost: 0,
+          food_cost: 0,
           key_expensive_ingredients: []
         }))
       };
     }
   }
 
-  // --- BAR AUDIT: Analyze Existing Menu ---
+  // --- MENU AUDIT: Analyze Existing Tasting Menu (FOOD) ---
   async analyzeExistingMenu(file: File | null, url: string | null): Promise<MenuAnalysisResponse> {
     const lang = this.langService.currentLang();
     const isIT = lang === 'IT';
 
     const systemPrompt = `
-You are a Senior Bar Consultant specializing in menu optimization and brand strategy.
-Your role is to audit cocktail menus and provide actionable insights.
+You are a Senior Restaurant Consultant specializing in menu optimization and brand strategy.
+Your role is to audit tasting menus and provide actionable insights.
 
 LANGUAGE: Output all text in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 `;
 
     const analysisInstructions = `
-TASK: Analyze this cocktail menu and provide a comprehensive audit.
+TASK: Analyze this tasting menu and provide a comprehensive audit.
 
 REQUIRED ANALYSIS:
 
 1. **RESTAURANT PROFILE**: Infer from the menu:
    - name: The establishment name (if visible, otherwise "Unknown Venue")
-   - brand_identity: The bar's positioning (e.g., "Speakeasy", "Craft Cocktail Bar", "Hotel Lounge", "Tiki Bar")
+   - brand_identity: The restaurant's positioning (e.g., "Fine Dining", "Trattoria", "Bistro", "Seafood House")
    - perceived_vibe: The atmosphere and experience it projects
    - target_audience: Who this menu is designed for
 
-2. **DISH ANALYSIS**: For EACH drink on the menu, provide:
-   - original_name: The drink's name as shown
+2. **DISH ANALYSIS**: For EACH dish on the menu, provide:
+   - original_name: The dish name as shown
    - current_description: The description/ingredients listed
-   - critique: What's wrong or could be improved (be constructive but honest)
+   - critique: What's wrong or could be improved (constructive but honest)
    - suggested_improvement: A specific, actionable improvement
    - alignment_score: 1-100 score of how well it fits the brand identity
 
@@ -788,7 +776,7 @@ ${analysisInstructions}
 
 MENU SOURCE: Website URL - ${url}
 
-Note: Please analyze based on typical cocktail menu patterns for this type of establishment.
+Note: Please analyze based on typical tasting menu patterns for this type of establishment.
 If you cannot access the URL directly, provide a template analysis that the user can refine.
 Ask the user to provide more details about the menu items if needed.
 
@@ -823,13 +811,13 @@ For now, create a sample analysis structure that demonstrates the audit format.
     });
   }
 
-  // --- BAR AUDIT: Regenerate a Single Dish with Improvement ---
+  // --- MENU AUDIT: Regenerate a Single Dish with Improvement (FOOD) ---
   async regenerateDish(profile: RestaurantProfile, dish: AnalyzedDish): Promise<AnalyzedDish> {
     const lang = this.langService.currentLang();
     const isIT = lang === 'IT';
 
     const prompt = `
-You are a Bar Consultant improving a cocktail for a specific venue.
+You are a Restaurant Consultant improving a dish for a specific venue.
 
 VENUE PROFILE:
 - Name: ${profile.name}
@@ -837,7 +825,7 @@ VENUE PROFILE:
 - Vibe: ${profile.perceived_vibe}
 - Target Audience: ${profile.target_audience}
 
-CURRENT DRINK TO IMPROVE:
+CURRENT DISH TO IMPROVE:
 - Name: ${dish.original_name}
 - Description: ${dish.current_description}
 - Previous Critique: ${dish.critique}
@@ -870,26 +858,26 @@ OUTPUT FORMAT (JSON ONLY):
     }
   }
 
-  // --- BAR AUDIT: Expand Analyzed Dish to Full Recipe ---
+  // --- MENU AUDIT: Expand Analyzed Dish to Full Recipe (FOOD) ---
   async expandDishToRecipe(profile: RestaurantProfile, dish: AnalyzedDish, expertise: ExpertiseLevel): Promise<MaestroResponse> {
     const lang = this.langService.currentLang();
     const sysPrompt = this.getSystemPrompt(lang);
 
     const contextPrompt = `
-CONTEXT: You are creating a full recipe for a bar with this profile:
+CONTEXT: You are creating a full recipe for a restaurant with this profile:
 - Name: ${profile.name}
 - Brand Identity: ${profile.brand_identity}
 - Vibe: ${profile.perceived_vibe}
 - Target: ${profile.target_audience}
 
-DRINK CONCEPT TO DEVELOP:
+DISH CONCEPT TO DEVELOP:
 - Name: ${dish.original_name}
 - Concept: ${dish.current_description}
 - Strategic Direction: ${dish.suggested_improvement}
 
 EXPERTISE LEVEL: ${expertise}
 
-TASK: Create a complete cocktail recipe following the system JSON schema.
+TASK: Create a complete dish recipe following the system JSON schema.
 The recipe must align perfectly with the venue's brand identity.
 JSON Only.
 `;
@@ -909,8 +897,8 @@ JSON Only.
     const isIT = lang === 'IT';
     return `
 ### ROLE
-You are "Maestro Mixologist", a World-Class Bar Director.
-You define distinct cocktail recipes for **EXACTLY 1 SERVING**.
+You are "Maestro Superiore", a high-level Culinary Intelligence.
+You act as an Executive Chef defining a distinct recipe for **EXACTLY 1 PERSON**.
 
 ### LANGUAGE REQUIREMENT
 **YOU MUST OUTPUT ALL TEXT CONTENT IN ${isIT ? 'ITALIAN (Italiano)' : 'ENGLISH'}.**
@@ -922,9 +910,9 @@ You define distinct cocktail recipes for **EXACTLY 1 SERVING**.
     "concept_summary": "String",
     "preparation_time_minutes": Number,
     "difficulty_level": "String",
-    "abv_estimate": "String",
     "calories_estimate": Number,
-    "drink_category": "String"
+    "dish_category": "String",
+    "macros": { "proteins_grams": Number, "carbs_grams": Number, "fats_grams": Number }
   },
   "sages_council": {
     "scientist": { "headline": "String", "analysis": "String" },
@@ -940,9 +928,9 @@ You define distinct cocktail recipes for **EXACTLY 1 SERVING**.
     "steps": [
       { "step_number": Number, "instruction": "String", "technical_note": "String" }
     ],
-    "glassware_guide": {
-      "glass_type": "String",
-      "ice_type": "String",
+    "plating_guide": {
+      "container": "String",
+      "arrangement": "String",
       "garnish_detail": "String"
     },
     "sensory_profile": {
