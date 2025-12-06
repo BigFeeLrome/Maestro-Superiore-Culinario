@@ -54,11 +54,7 @@
       <app-landing (modeSelected)="selectMode($event)"></app-landing>
     }
     @case ('CREATION') {
-      @if (creationMode() === 'CALCULATOR') {
-        <app-calculator></app-calculator>
-      } @else {
-        <app-dashboard [mode]="creationMode()"></app-dashboard>
-      }
+      <app-dashboard [mode]="creationMode()"></app-dashboard>
     }
   }
 

@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, AfterViewInit, View
 import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './app/pages/dashboard/dashboard.component';
 import { LandingComponent } from './app/pages/landing/landing.component';
-import { CalculatorComponent } from './app/ui/calculator/calculator.component';
 import { LanguageService, Language } from './app/core/services/language.service';
 import { MaestroStore, CreationMode } from './app/core/services/maestro-store.service';
 import { ApiKeyService } from './app/core/services/api-key.service';
@@ -14,7 +13,7 @@ import { AuthService } from './app/core/services/auth.service';
   standalone: true,
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DashboardComponent, LandingComponent, CalculatorComponent]
+  imports: [CommonModule, DashboardComponent, LandingComponent]
 })
 export class AppComponent implements OnInit, AfterViewInit {
   private readonly store = inject(MaestroStore);

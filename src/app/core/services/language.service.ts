@@ -14,8 +14,6 @@ const DICTIONARY = {
         landing_desc_menu: 'Sviluppo di un Menu Completo',
         landing_mode_analysis: 'Audit Ristorante',
         landing_desc_analysis: 'Analisi Strategica di Menu Esistenti',
-        landing_mode_calculator: 'Calcolatore Alcol',
-        landing_desc_calculator: 'Calcolo Diluizione Alcolica Professionale',
 
         // HEADER & NAV
         back_home: 'HOME',
@@ -220,21 +218,6 @@ const DICTIONARY = {
         photo_btn_insert: 'Inserisci nella Ricetta',
         photo_btn_close: 'Torna alla Ricetta',
 
-        // CALCULATOR
-        calc_title: 'Calcolatore Alcol',
-        calc_subtitle: 'Diluizione Professionale',
-        calc_form_title: 'Parametri Diluizione',
-        calc_initial_volume: 'Volume Iniziale (ml)',
-        calc_initial_abv: 'ABV Iniziale (%)',
-        calc_target_abv: 'ABV Target (%)',
-        calc_loading: 'Elaborazione...',
-        calc_calculate: 'Calcola',
-        calc_results: 'Risultati',
-        calc_water_to_add: 'Acqua da Aggiungere',
-        calc_final_volume: 'Volume Finale',
-        calc_download_pdf: 'Scarica PDF',
-        calc_maestro_says: 'Il Maestro dice',
-        calc_consulting: 'Consulenza Alcolicomplex',
     },
 
     EN: {
@@ -247,8 +230,6 @@ const DICTIONARY = {
         landing_desc_menu: 'Development of a Full Culinary Program',
         landing_mode_analysis: 'Restaurant Audit',
         landing_desc_analysis: 'Strategic Audit of Existing Menus',
-        landing_mode_calculator: 'Alcohol Calculator',
-        landing_desc_calculator: 'Professional Alcohol Dilution Calculator',
 
         // HEADER & NAV
         back_home: 'HOME',
@@ -453,21 +434,6 @@ const DICTIONARY = {
         photo_btn_insert: 'Insert into Recipe',
         photo_btn_close: 'Back to Recipe',
 
-        // CALCULATOR
-        calc_title: 'Alcohol Calculator',
-        calc_subtitle: 'Professional Dilution',
-        calc_form_title: 'Dilution Parameters',
-        calc_initial_volume: 'Initial Volume (ml)',
-        calc_initial_abv: 'Initial ABV (%)',
-        calc_target_abv: 'Target ABV (%)',
-        calc_loading: 'Processing...',
-        calc_calculate: 'Calculate',
-        calc_results: 'Results',
-        calc_water_to_add: 'Water to Add',
-        calc_final_volume: 'Final Volume',
-        calc_download_pdf: 'Download PDF',
-        calc_maestro_says: 'The Maestro Says',
-        calc_consulting: 'Alcohol Consulting',
     }
 };
 
