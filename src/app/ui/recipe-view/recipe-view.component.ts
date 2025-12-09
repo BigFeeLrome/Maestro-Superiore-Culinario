@@ -75,6 +75,19 @@ export class RecipeViewComponent implements OnInit {
 
         try {
             const marketReport = await this.geminiService.analyzeSingleDishMarket(this.data);
+            
+            // Validate the report has data
+            console.log('Recipe export - Market report received:', {
+              total_cost: marketReport.total_food_cost,
+              breakdown_items: marketReport.cost_breakdown.length,
+              first_item: marketReport.cost_breakdown[0],
+              nutritional: marketReport.nutritional_profile
+            });
+            
+            if (!marketReport.cost_breakdown || marketReport.cost_breakdown.length === 0) {
+              console.warn('Warning: Cost breakdown is empty');
+            }
+            
             this.processingMessage.set("Generating Document...");
             await this.generatePdf(marketReport);
 

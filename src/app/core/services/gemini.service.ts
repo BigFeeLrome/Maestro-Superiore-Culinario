@@ -399,7 +399,7 @@ LANGUAGE: Output all text in ${isIT ? 'ITALIAN' : 'ENGLISH'}.
 `;
 
     const userPrompt = `
-TASK: Analyze this dish for financial viability and nutritional profile.
+TASK: Analyze this dish for financial viability and nutritional profile. CRITICAL: Return ONLY valid JSON with ALL numeric fields filled (no null, no undefined).
 
 RECIPE INGREDIENTS:
 ${ingredientsList}
@@ -408,55 +408,64 @@ PREPARATION: ${technique}
 
 REQUIRED ANALYSIS:
 
-1. COST BREAKDOWN (for each ingredient):
+1. COST BREAKDOWN (for EACH ingredient - DO NOT SKIP):
    - Market unit price using appropriate unit (e.g., "€8.50 / kg", "€2.00 / unit", "€3.00 / bunch")
-   - Calculated cost for the quantity used in this recipe
+   - Calculated cost (NUMERIC VALUE): the actual cost for the quantity used
    - Market trend: STABLE, RISING, or FALLING
-   - Calories for the quantity used (if applicable)
-   - Macros (grams): proteins, carbs, fats (if applicable)
-   - Allergens list (if applicable)
+   - Calories (NUMERIC VALUE - minimum 0, not null): for the quantity used
+   - Proteins grams (NUMERIC VALUE - minimum 0, not null)
+   - Carbs grams (NUMERIC VALUE - minimum 0, not null)
+   - Fats grams (NUMERIC VALUE - minimum 0, not null)
+   - Allergens list (may be empty array)
 
 2. FINANCIAL SUMMARY:
-   - Total food cost (sum of all ingredient costs)
-   - Suggested menu price (targeting 75-80% profit margin)
-   - Actual profit margin percentage
+   - Total food cost (NUMERIC VALUE - sum of all calculated costs)
+   - Suggested menu price (NUMERIC VALUE - targeting 75-80% profit margin)
+   - Profit margin percentage (NUMERIC VALUE)
 
-3. NUTRITIONAL PROFILE (dish level):
-   - Total calories
-   - Macros (grams): proteins, carbs, fats
-   - Fiber (grams)
+3. NUTRITIONAL PROFILE (dish level - NUMERIC VALUES):
+   - Total calories (NUMERIC VALUE - not null)
+   - Proteins grams (NUMERIC VALUE - not null)
+   - Carbs grams (NUMERIC VALUE - not null)
+   - Fats grams (NUMERIC VALUE - not null)
+   - Fiber grams (NUMERIC VALUE - not null)
    - Allergens list
 
 4. MARKETING & STRATEGY:
-   - A compelling one-line marketing hook for this dish
-   - A professional pricing strategy note (why this price makes sense)
+   - Marketing hook: compelling one-liner
+   - Pricing strategy note: professional explanation
 
-OUTPUT FORMAT (JSON ONLY):
+CRITICAL RULES:
+- ALL numeric fields must be numbers (not strings, not null)
+- If you don't know a value, use 0 instead of null
+- Return ONLY the JSON object, no markdown, no explanation
+
+OUTPUT FORMAT (JSON ONLY - NO OTHER TEXT):
 {
-  "total_food_cost": number,
-  "suggested_menu_price": number,
-  "profit_margin_percentage": number,
+  "total_food_cost": 45.50,
+  "suggested_menu_price": 89.00,
+  "profit_margin_percentage": 78.5,
   "cost_breakdown": [
     {
       "ingredient": "string",
       "quantity_used": "string",
       "market_unit_price": "string",
-      "calculated_cost": number,
-      "market_trend": "STABLE" | "RISING" | "FALLING",
-      "calories": number,
-      "proteins_grams": number,
-      "carbs_grams": number,
-      "fats_grams": number,
-      "allergens": ["string"]
+      "calculated_cost": 5.50,
+      "market_trend": "STABLE",
+      "calories": 120,
+      "proteins_grams": 8.5,
+      "carbs_grams": 15.2,
+      "fats_grams": 3.1,
+      "allergens": []
     }
   ],
   "nutritional_profile": {
-    "total_calories": number,
-    "proteins_grams": number,
-    "carbs_grams": number,
-    "fats_grams": number,
-    "fiber_grams": number,
-    "allergens": ["string"]
+    "total_calories": 650,
+    "proteins_grams": 25.5,
+    "carbs_grams": 65.2,
+    "fats_grams": 18.5,
+    "fiber_grams": 4.2,
+    "allergens": []
   },
   "marketing_hook": "string",
   "pricing_strategy_note": "string"
@@ -466,20 +475,38 @@ OUTPUT FORMAT (JSON ONLY):
     try {
       const model = this.getModel(this.flashModelName, systemPrompt);
       const result = await model.generateContent(userPrompt);
-      const report = this.extractJson<MarketReport>(result.response.text());
+      const responseText = result.response.text();
+      
+      console.log('Market analysis response length:', responseText.length);
+      console.log('Market analysis response preview:', responseText.substring(0, 300));
+      
+      const report = this.extractJson<MarketReport>(responseText);
+      
+      // Log the extracted report to verify data
+      console.log('Extracted market report:', {
+        total_food_cost: report.total_food_cost,
+        items_count: report.cost_breakdown?.length,
+        first_item_cost: report.cost_breakdown?.[0]?.calculated_cost,
+        total_calories: report.nutritional_profile?.total_calories
+      });
       
       // Validate and ensure all required fields exist
-      return {
-        total_food_cost: report.total_food_cost ?? 0,
-        suggested_menu_price: report.suggested_menu_price || 0,
+      const validatedReport: MarketReport = {
+        total_food_cost: (report.total_food_cost && report.total_food_cost > 0) ? report.total_food_cost : 0,
+        suggested_menu_price: (report.suggested_menu_price && report.suggested_menu_price > 0) ? report.suggested_menu_price : 0,
         profit_margin_percentage: report.profit_margin_percentage || 0,
-        cost_breakdown: report.cost_breakdown || [],
+        cost_breakdown: (report.cost_breakdown && Array.isArray(report.cost_breakdown) && report.cost_breakdown.length > 0) 
+          ? report.cost_breakdown 
+          : [],
         nutritional_profile: report.nutritional_profile || {
           total_calories: 0
         },
         marketing_hook: report.marketing_hook || "A refined culinary experience",
         pricing_strategy_note: report.pricing_strategy_note || "Priced for premium positioning"
       };
+      
+      console.log('Final validated report:', validatedReport);
+      return validatedReport;
     } catch (error) {
       console.error('Market analysis failed:', error);
       // Return a fallback report instead of throwing
